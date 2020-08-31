@@ -69,7 +69,26 @@ class Arrangements {
     return true;
   }
 }
+class ScreenShot{
+  ID: string;
+  Format: ("jpeg"|"png")
+  Data: string;
+  TabID: number;
+  URL: string;
+  toJSON(){
+    return this.ID + "." + this.Format
+  }
+}
 class MyTab{
+  Ready: Promise<boolean>;
+  IsReady: boolean;
+  IsActive: boolean;
+  WindowID: number;
+  TabID: number;
+  ScreenShot: ScreenShot;
+  Title: string,
+  "URL": "https://puyo.sega.jp/PuyoPuyo_eSports/",
+  "Pinned": false
   constructor(tabID: number){
 
   }
@@ -80,7 +99,7 @@ class MyTabs extends Map<number, MyTab>{
   }
 }
 class MyWindow {
-  Ready: Promise<void>;
+  Ready: Promise<boolean>;
   IsReady: boolean;
   IsActive: boolean = false;
   WindowID?: number;
@@ -97,7 +116,7 @@ class MyWindow {
     });
     const promiseWindowInfo = browser.windows.get(windowID, { populate: false });
     promiseWindowInfo.catch((errMessage: string) => {
-      throw new Error(errMessage);
+      this.Ready = Promise.resolve(false);
     });
     this.Ready = promiseWindowInfo.then(async (windowInfo: browser.windows.Window) => {
       if (windowInfo.type !== "normal") {
@@ -112,6 +131,7 @@ class MyWindow {
         }
       }
       this.IsReady = true;
+      return true;
     });
   }
 }

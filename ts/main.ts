@@ -4,12 +4,12 @@ const updateJson = (responce: JSON) => {
 
 }
 
-port.onMessage.addListener((response) => {
+app.Port.onMessage.addListener((response) => {
   console.log("Received: " + response);
 });
 
 browser.browserAction.onClicked.addListener(() => {
   console.log("Sending: ping");
-  port.postMessage("ping" as any);
+  app.Port.postMessage("ping" as any);
 });
 
