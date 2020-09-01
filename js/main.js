@@ -1,17 +1,21 @@
 "use strict";
 const app = new App();
-app.SendingObject = new SendingObject();
 browser.windows.onCreated.addListener(async (windowInfo) => {
-    var _a;
-    (_a = app.SendingObject) === null || _a === void 0 ? void 0 : _a.AddWindow(windowInfo);
+    app.SendingObject.AddWindow(windowInfo);
 });
 browser.windows.onRemoved.addListener(async (windowID) => {
-    var _a;
-    (_a = app.SendingObject) === null || _a === void 0 ? void 0 : _a.RemoveWindow(windowID);
+    app.SendingObject.RemoveWindow(windowID);
 });
 browser.windows.onFocusChanged.addListener(async (windowID) => {
+    app.SendingObject.FocusChanged(windowID);
+});
+browser.tabs.onActivated.addListener(async (activeInfo) => {
     var _a;
-    (_a = app.SendingObject) === null || _a === void 0 ? void 0 : _a.FocusChanged(windowID);
+    if (app.SendingObject.Windows.get(activeInfo.windowId) === undefined) {
+        app.SendingObject.Error.ThrowError();
+        return;
+    }
+    (_a = app.SendingObject.Windows.get(activeInfo.windowId)) === null || _a === void 0 ? void 0 : _a.ActiveTabChanged(activeInfo.tabId);
 });
 app.Port.onMessage.addListener((response) => {
     console.log("Received: " + response);

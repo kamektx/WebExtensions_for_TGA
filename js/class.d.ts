@@ -56,8 +56,10 @@ declare class MyTab {
     Title?: string;
     URL?: string;
     IsPinned?: boolean;
+    SendingObject: SendingObject;
+    MyWindow: MyWindow;
     SetTabInfo: (tabInfo: browser.tabs.Tab) => Promise<boolean>;
-    constructor(arg: (number | browser.tabs.Tab));
+    constructor(myWindow: MyWindow, arg: (number | browser.tabs.Tab));
 }
 declare class MyTabs extends Map<number, MyTab> {
     toJSON(): [number, MyTab][];
@@ -70,6 +72,7 @@ declare class MyWindow {
     ActiveTabID?: number;
     RecentTabs: number[];
     TabsInOrder: number[];
+    SendingObject: SendingObject;
     Tabs: MyTabs;
     Tabs2: MyTabs;
     SetWindowInfo: (windowInfo: browser.windows.Window) => Promise<boolean>;
@@ -84,15 +87,28 @@ declare class SendingObject {
     ActiveWindowID: number;
     Arrangements: Arrangements;
     Windows: MyWindows;
+    Error: SendingObjectError;
     SetWindowsInfo: (windowsInfo: browser.windows.Window[]) => Promise<boolean>;
+    Verify: () => Promise<boolean>;
     AddWindow: (windowInfo: browser.windows.Window) => Promise<boolean>;
     RemoveWindow: (windowID: number) => Promise<boolean>;
     FocusChanged: (windowID: number) => Promise<boolean>;
     constructor();
 }
+declare class SendingObjectError {
+    static readonly WaitForErrorHandle = 200;
+    static readonly TimerTickTime = 30;
+    SendingObject: SendingObject;
+    IsError: boolean;
+    TimerMilliSeconds: number;
+    Timer: () => Promise<boolean>;
+    HandleError: () => Promise<boolean>;
+    ThrowError(): void;
+    constructor(sendingObject: SendingObject);
+}
 declare class App {
     Port: browser.runtime.Port;
-    SendingObject?: SendingObject;
+    SendingObject: SendingObject;
     SendingJson?: string;
     constructor();
 }
