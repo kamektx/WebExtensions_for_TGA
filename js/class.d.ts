@@ -37,31 +37,58 @@ declare class Arrangements {
     AddDirection(arrangement: Arrangement, direction: Direction, overWrite?: boolean): boolean;
     RemoveDirecton(direction: Direction): boolean;
 }
-declare class MyTab {
-    constructor(tabID: number);
-}
-declare class MyTabs extends Map<number, MyTab> {
+declare class ScreenShot {
+    ID?: string;
+    Format?: ("jpeg" | "png");
+    Data?: string;
+    TabID?: number;
+    URL?: string;
     toJSON(): string;
 }
+declare class MyTab {
+    Ready: Promise<boolean>;
+    IsReady: boolean;
+    IsActive?: boolean;
+    WindowID?: number;
+    TabID?: number;
+    Index?: number;
+    ScreenShot?: ScreenShot;
+    Title?: string;
+    URL?: string;
+    IsPinned?: boolean;
+    SetTabInfo: (tabInfo: browser.tabs.Tab) => Promise<boolean>;
+    constructor(arg: (number | browser.tabs.Tab));
+}
+declare class MyTabs extends Map<number, MyTab> {
+    toJSON(): [number, MyTab][];
+}
 declare class MyWindow {
-    Ready: Promise<void>;
+    Ready: Promise<boolean>;
     IsReady: boolean;
     IsActive: boolean;
     WindowID?: number;
     ActiveTabID?: number;
     RecentTabs: number[];
     TabsInOrder: number[];
-    Tabs?: MyTabs;
-    Tabs2?: MyTabs;
-    constructor(windowID: number);
+    Tabs: MyTabs;
+    Tabs2: MyTabs;
+    SetWindowInfo: (windowInfo: browser.windows.Window) => Promise<boolean>;
+    constructor(arg: (number | browser.windows.Window));
 }
 declare class MyWindows extends Map<number, MyWindow> {
-    toJSON(): string;
+    toJSON(): [number, MyWindow][];
 }
 declare class SendingObject {
-    ActiveWindowID?: number;
-    Arrangements?: Arrangements;
-    Windows?: MyWindows;
+    Ready: Promise<boolean>;
+    IsReady: boolean;
+    ActiveWindowID: number;
+    Arrangements: Arrangements;
+    Windows: MyWindows;
+    SetWindowsInfo: (windowsInfo: browser.windows.Window[]) => Promise<boolean>;
+    AddWindow: (windowInfo: browser.windows.Window) => Promise<boolean>;
+    RemoveWindow: (windowID: number) => Promise<boolean>;
+    FocusChanged: (windowID: number) => Promise<boolean>;
+    constructor();
 }
 declare class App {
     Port: browser.runtime.Port;
@@ -69,5 +96,4 @@ declare class App {
     SendingJson?: string;
     constructor();
 }
-declare const app: App;
 //# sourceMappingURL=class.d.ts.map

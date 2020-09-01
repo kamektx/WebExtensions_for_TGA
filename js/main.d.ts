@@ -1,2 +1,2 @@
-declare const updateJson: (responce: JSON) => void;
+declare const app: App;
 //# sourceMappingURL=main.d.ts.map

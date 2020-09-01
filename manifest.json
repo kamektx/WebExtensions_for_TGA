@@ -17,7 +17,6 @@
 
   "background": {
     "page": "background.html"
-    "scripts": ["modules/browser-polyfill.min.js", "js/background.js"]
   },
 
   "browser_action": {

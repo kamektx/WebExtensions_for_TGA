@@ -60,10 +60,11 @@
               "IsActive": false,
               "WindowID": 1,
               "TabID": 0,
+              "Index": 4,
               "ScreenShot": "haofiojawieonwue.png",
               "Title": "ぷよぷよeスポーツ | SEGA",
               "URL": "https://puyo.sega.jp/PuyoPuyo_eSports/",
-              "Pinned": false
+              "IsPinned": false
             }
           ]
         ]
