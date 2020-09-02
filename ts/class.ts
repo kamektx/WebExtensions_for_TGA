@@ -121,7 +121,7 @@ class MyTab {
       const tabInfo: browser.tabs.Tab = arg;
       this.Ready = this.SetTabInfo(tabInfo);
     }
-    this.SendingObject.Readies.add(this.Ready);
+    this.SendingObject.ReadyInstances.add(this);
     Object.defineProperties(this, {
       Ready: { enumerable: false },
       SendingObject: { enumerable: false },
@@ -221,7 +221,7 @@ class MyWindow {
       const windowInfo: browser.windows.Window = arg;
       this.Ready = this.SetWindowInfo(windowInfo);
     }
-    this.SendingObject.Readies.add(this.Ready);
+    this.SendingObject.ReadyInstances.add(this);
     Object.defineProperties(this, {
       Ready: { enumerable: false },
       Tabs2: { enumerable: false },
@@ -235,15 +235,66 @@ class MyWindows extends Map<number, MyWindow>{
   }
 }
 
+interface ReadyInstance {
+  Ready: Promise<boolean>
+}
 class SendingObject {
   Ready: Promise<boolean>;
   IsReady: boolean;
   ActiveWindowID?: number;
   Arrangements: Arrangements;
   Windows: MyWindows;
-  NoManageWindows: Set<number>;
+  UnmanagedWindows: Set<number>;
   Error: SendingObjectError;
-  Readies: Set<Promise<boolean>>;
+  ReadyInstances: Set<ReadyInstance>;
+
+  AllReadyResolved = async (): Promise<boolean> => {
+    for (const inst of this.ReadyInstances) {
+      const isReady = await inst.Ready;
+      if (isReady === false) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  FindWindowWhichHasTheTabID = async (tabID: number): Promise<(MyWindow | undefined)> => {
+    const isReady = await this.AllReadyResolved();
+    if (isReady === false) {
+      return undefined;
+    }
+    if (this.ActiveWindowID !== undefined) {
+      if (this.Windows.has(this.ActiveWindowID)) {
+        if (this.Windows.get(this.ActiveWindowID)!.Tabs.has(tabID)) {
+          return this.Windows.get(this.ActiveWindowID)!;
+        }
+      } else {
+        this.IsReady = false;
+        this.Error.ThrowError("Sending Object : this.Windows.has(this.ActiveWindowID) returned false.");
+        return undefined;
+      }
+    }
+    for (const myWindow of this.Windows.values()) {
+      if (myWindow.Tabs.has(tabID)) {
+        return myWindow;
+      }
+    }
+    return undefined;
+  }
+
+  HasWindowID = async (windowID: number): Promise<("false" | "managed" | "unmanaged")> => {
+    const isReady = await this.Ready;
+    if (isReady === false) {
+      return "false";
+    }
+    if (this.Windows.has(windowID)) {
+      return "managed";
+    } else if (this.UnmanagedWindows.has(windowID)) {
+      return "unmanaged";
+    } else {
+      return "false";
+    }
+  }
 
   SetWindowsInfo = async (windowsInfo: browser.windows.Window[]): Promise<boolean> => {
     if (windowsInfo.length === 0) {
@@ -255,7 +306,7 @@ class SendingObject {
         return false;
       }
       if (windowInfo.type !== "normal") {
-        this.NoManageWindows.add(windowInfo.id!);
+        this.UnmanagedWindows.add(windowInfo.id!);
       } else {
         if (windowInfo.id !== undefined) {
           // if(this.Windows.has(windowInfo.id)){
@@ -271,8 +322,8 @@ class SendingObject {
         }
       }
     }
-    this.IsReady = true;
-    return true;
+    this.IsReady = await this.Verify();
+    return this.IsReady;
   }
   Verify = async (): Promise<boolean> => {
     if (await this.Ready === false) {
@@ -281,7 +332,7 @@ class SendingObject {
       return false;
     }
     const windowsInfo = await browser.windows.getAll({ populate: false });
-    if (windowsInfo.length !== this.Windows.size + this.NoManageWindows.size) {
+    if (windowsInfo.length !== this.Windows.size + this.UnmanagedWindows.size) {
       this.Error.ThrowError("Sending Object : The number of windows won't match.");
       this.IsReady = false;
       return false;
@@ -295,15 +346,18 @@ class SendingObject {
       return false;
     }
     this.Ready = this.SetWindowsInfo([windowInfo]);
-    return await this.Ready && await this.Verify();
+    return await this.Ready;
   }
   RemoveWindow = async (windowID: number): Promise<boolean> => {
     const isReady = await this.Ready;
     if (isReady === false) {
       return false;
     }
-    this.NoManageWindows.delete(windowID);
-    this.Windows.delete(windowID);
+    this.UnmanagedWindows.delete(windowID);
+    if (this.Windows.has(windowID)) {
+      this.ReadyInstances.delete(this.Windows.get(windowID)!);
+      this.Windows.delete(windowID);
+    }
     this.IsReady = await this.Verify();
     return this.IsReady;
   }
@@ -321,7 +375,7 @@ class SendingObject {
           return false;
         }
       }
-      if (this.NoManageWindows.has(windowID)) {
+      if (this.UnmanagedWindows.has(windowID)) {
         this.ActiveWindowID = undefined;
       } else {
         if (this.Windows.get(windowID) !== undefined && await this.Windows.get(windowID)!.Ready) {
@@ -331,30 +385,30 @@ class SendingObject {
           return false;
         }
       }
-      this.IsReady = true;
-      return true;
+      this.IsReady = await this.Verify();
+      return this.IsReady;
     })();
-    return await this.Ready && await this.Verify();
+    return await this.Ready;
   }
   constructor() {
     this.IsReady = false;
     this.ActiveWindowID = -1;
     this.Arrangements = new Arrangements();
     this.Windows = new MyWindows();
-    this.NoManageWindows = new Set<number>();
+    this.UnmanagedWindows = new Set<number>();
     this.Error = new SendingObjectError(this);
-    this.Readies = new Set<Promise<boolean>>();
+    this.ReadyInstances = new Set();
     const promiseWindowsInfo = browser.windows.getAll({ populate: false });
     promiseWindowsInfo.catch((errMessage: string) => {
       this.Ready = Promise.resolve(false);
     });
     this.Ready = promiseWindowsInfo.then(this.SetWindowsInfo);
-    this.Readies.add(this.Ready);
+    this.ReadyInstances.add(this);
     Object.defineProperties(this, {
       Ready: { enumerable: false },
-      SendingObjectError: { enumerable: false },
-      NoManageWindows: { enumerable: false },
-      Readies: { enumerable: false }
+      Error: { enumerable: false },
+      UnmanagedWindows: { enumerable: false },
+      ReadyInstances: { enumerable: false }
     });
   }
 }

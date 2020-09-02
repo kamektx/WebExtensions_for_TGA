@@ -15,49 +15,119 @@ browser.windows.onFocusChanged.addListener(async (windowID: number) => {
 
 browser.tabs.onActivated.addListener(async (activeInfo) => {
   console.log("tabs.onActivated");
-  if (app.SendingObject.Windows.has(activeInfo.windowId) === false) {
-    app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + activeInfo.windowId + ". : onActivated");
-    return;
+  switch (await app.SendingObject.HasWindowID(activeInfo.windowId)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + activeInfo.windowId + ". : tabs.onActivated");
+      return;
+    case "managed":
+      app.SendingObject.Windows.get(activeInfo.windowId)?.ActiveTabChanged(activeInfo.tabId);
   }
-  app.SendingObject.Windows.get(activeInfo.windowId)?.ActiveTabChanged(activeInfo.tabId);
 });
 browser.tabs.onAttached.addListener(async (tabID, attachInfo) => {
   console.log("tabs.onAttached");
-  if (app.SendingObject.Windows.has(attachInfo.newWindowId) === false) {
-    app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + attachInfo.newWindowId + ". : onAttached");
-    return;
+  switch (await app.SendingObject.HasWindowID(attachInfo.newWindowId)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + attachInfo.newWindowId + ". : tabs.onAttached");
+      return;
+    case "managed":
+      app.SendingObject.Windows.get(attachInfo.newWindowId)?.AttachTab(tabID);
   }
-  app.SendingObject.Windows.get(attachInfo.newWindowId)?.AttachTab(tabID);
 });
 browser.tabs.onDetached.addListener(async (tabID, detachInfo) => {
   console.log("tabs.onDetached");
-  if (app.SendingObject.Windows.has(detachInfo.oldWindowId) === false) {
-    app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + detachInfo.oldWindowId + ". : onDetached");
-    return;
+  switch (await app.SendingObject.HasWindowID(detachInfo.oldWindowId)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + detachInfo.oldWindowId + ". : tabs.onDetached");
+      return;
+    case "managed":
+      app.SendingObject.Windows.get(detachInfo.oldWindowId)?.DetachTab(tabID);
+      break;
   }
-  app.SendingObject.Windows.get(detachInfo.oldWindowId)?.DetachTab(tabID);
 });
 browser.tabs.onCreated.addListener(async (tabInfo) => {
   console.log("tabs.onCreated");
-  if (tabInfo.windowId === undefined){
+  if (tabInfo.windowId === undefined) {
     throw new Error("Couldn't get the windowID");
   }
-  if (app.SendingObject.Windows.has(tabInfo.windowId!) === false) {
-    app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : onCreated");
-    return;
+  switch (await app.SendingObject.HasWindowID(tabInfo.windowId!)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onCreated");
+      return;
+    case "managed":
+      app.SendingObject.Windows.get(tabInfo.windowId)?.CreateTab(tabInfo);
+      break;
   }
-  app.SendingObject.Windows.get(tabInfo.windowId)?.CreateTab(tabInfo);
 });
 browser.tabs.onMoved.addListener(async (tabID, moveInfo) => {
   console.log("tabs.onMoved");
-  if (moveInfo.windowId === undefined){
+  if (moveInfo.windowId === undefined) {
     throw new Error("Couldn't get the windowID");
   }
-  if (app.SendingObject.Windows.has(moveInfo.windowId!) === false) {
-    app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + moveInfo.windowId + ". : onMoved");
-    return;
+  switch (await app.SendingObject.HasWindowID(moveInfo.windowId!)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + moveInfo.windowId + ". : tabs.onMoved");
+      return;
+    case "managed":
+      app.SendingObject.Windows.get(moveInfo.windowId)?.MoveTab();
+      break;
   }
-  app.SendingObject.Windows.get(moveInfo.windowId)?.MoveTab();
+});
+browser.tabs.onRemoved.addListener(async (tabID, removeInfo) => {
+  console.log("tabs.onRemoved");
+  if (removeInfo.windowId === undefined) {
+    throw new Error("Couldn't get the windowID");
+  }
+  switch (await app.SendingObject.HasWindowID(removeInfo.windowId!)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + removeInfo.windowId + ". : tabs.onRemoved");
+      return;
+    case "managed":
+      if (removeInfo.isWindowClosing === false) {
+        app.SendingObject.Windows.get(removeInfo.windowId)?.RemoveTab(tabID);
+      }
+      break;
+  }
+});
+chrome.tabs.onReplaced.addListener(async (addedTabID, removedTabID) => {
+  console.log("tabs.onReplaced");
+  app.SendingObject.FindWindowWhichHasTheTabID
+});
+
+
+browser.tabs.onUpdated.addListener(async (tabID, changeInfo, tabInfo) => {
+  console.log("tabs.onUpdated (URL)");
+  if (tabInfo.windowId === undefined) {
+    throw new Error("Couldn't get the windowID");
+  }
+  console.log(changeInfo);
+  switch (await app.SendingObject.HasWindowID(tabInfo.windowId!)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onUpdated (URL)");
+      return;
+    case "managed":
+      app.SendingObject.Windows.get(tabInfo.windowId)?.UpdateTab(tabID);
+      break;
+  }
+}, {
+  properties: []
+});
+
+browser.tabs.onUpdated.addListener(async (tabID, changeInfo, tabInfo) => {
+  console.log("tabs.onUpdated (Property)");
+  if (tabInfo.windowId === undefined) {
+    throw new Error("Couldn't get the windowID");
+  }
+  console.log(changeInfo);
+  switch (await app.SendingObject.HasWindowID(tabInfo.windowId!)) {
+    case "false":
+      app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onUpdated (Property)");
+      return;
+    case "managed":
+      app.SendingObject.Windows.get(tabInfo.windowId)?.UpdateTab(tabID);
+      break;
+  }
+}, {
+  properties: ["hidden", "pinned", "title"]
 });
 
 
