@@ -90,7 +90,12 @@ browser.tabs.onRemoved.addListener(async (tabID, removeInfo) => {
 });
 chrome.tabs.onReplaced.addListener(async (addedTabID, removedTabID) => {
   console.log("tabs.onReplaced");
-  app.SendingObject.FindWindowWhichHasTheTabID
+  const myWindow = await app.SendingObject.FindWindowWhichHasTheTabID(removedTabID);
+  if (myWindow === undefined) {
+    app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the window which has the TabID " + removedTabID + ". : tabs.onReplaced");
+    return;
+  }
+  myWindow.ReplaceTab(addedTabID, removedTabID);
 });
 
 
