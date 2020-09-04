@@ -5,6 +5,7 @@ interface ReadyInstance {
 declare class SendingObject {
     Ready: Promise<boolean>;
     IsReady: boolean;
+    IsNotError: boolean;
     ActiveWindowID?: number;
     Arrangements: Arrangements;
     Windows: MyWindows;
@@ -16,6 +17,7 @@ declare class SendingObject {
     HasWindowID: (windowID: number) => Promise<("false" | "managed" | "unmanaged")>;
     SetWindowsInfo: (windowsInfo: browser.windows.Window[]) => Promise<boolean>;
     Verify: () => Promise<boolean>;
+    Verify_DontWaitReady: () => Promise<boolean>;
     AddWindow: (windowInfo: browser.windows.Window) => Promise<boolean>;
     RemoveWindow: (windowID: number) => Promise<boolean>;
     FocusChanged: (windowID: number) => Promise<boolean>;
