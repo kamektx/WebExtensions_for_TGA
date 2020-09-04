@@ -6,7 +6,7 @@ declare class MyTab {
     IsActive?: boolean;
     WindowID?: number;
     TabID?: number;
-    Index?: number;
+    Status?: string;
     ScreenShot?: ScreenShot;
     Title?: string;
     URL?: string;

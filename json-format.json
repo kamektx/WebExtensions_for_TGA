@@ -4,22 +4,18 @@
     "Down": {
       "StartPosition": {
         "Row": 1,
-        "Column": 0
+        "Index": 0
       },
       "Column": [
         {
           "Size": "big",
-          "Row": {
-            "Type": "ActiveAndRecentTabs",
-            "MaxColumns": 2
-          }
+          "Type": "ActiveAndRecentTabs",
+          "MaxColumns": 2
         },
         {
           "Size": "small",
-          "Row": {
-            "Type": "TabsInOrder",
-            "MaxColumns": 0
-          }
+          "Type": "TabsInOrder",
+          "MaxColumns": 0
         }
       ]
     },
@@ -30,12 +26,12 @@
       "Left": false
     }
   },
-
   "Windows": [
     [
       1,
       {
         "IsReady": true,
+        "IsNotError": true,
         "WindowID": 1,
         "IsActive": true,
         "ActiveTabID": "5",
@@ -57,14 +53,16 @@
             0,
             {
               "IsReady": true,
+              "IsNotError": true,
               "IsActive": false,
               "WindowID": 1,
               "TabID": 0,
-              "Index": 4,
+              "Status": "complete",
               "ScreenShot": "haofiojawieonwue.png",
               "Title": "ぷよぷよeスポーツ | SEGA",
               "URL": "https://puyo.sega.jp/PuyoPuyo_eSports/",
-              "IsPinned": false
+              "IsPinned": false,
+              "IsHidden": false
             }
           ]
         ]

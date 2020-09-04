@@ -6,7 +6,7 @@ declare class SendingObject {
     Ready: Promise<boolean>;
     IsReady: boolean;
     IsNotError: boolean;
-    ActiveWindowID?: number;
+    ActiveWindowID: number | undefined;
     Arrangements: Arrangements;
     Windows: MyWindows;
     UnmanagedWindows: Set<number>;

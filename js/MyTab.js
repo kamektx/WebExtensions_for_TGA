@@ -36,13 +36,15 @@ class MyTab {
                 this.IsReady = true;
                 return this.IsNotError;
             })();
-            return await this.Ready;
+            await this.Ready;
+            return this.IsNotError;
         };
         this.SetTabInfo = async (tabInfo) => {
             this.IsActive = tabInfo.active;
             this.WindowID = tabInfo.windowId;
             this.TabID = tabInfo.id;
-            this.Index = tabInfo.index;
+            // this.Index = tabInfo.index;
+            this.Status = tabInfo.status;
             this.Title = tabInfo.title;
             this.URL = tabInfo.url;
             this.IsPinned = tabInfo.pinned;

@@ -5,7 +5,8 @@ class MyTab {
   IsActive?: boolean;
   WindowID?: number;
   TabID?: number;
-  Index?: number;
+  Status?: string;
+  // Index?: number;
   ScreenShot?: ScreenShot;
   Title?: string;
   URL?: string;
@@ -51,14 +52,16 @@ class MyTab {
       this.IsReady = true;
       return this.IsNotError;
     })();
-    return await this.Ready;
+    await this.Ready;
+    return this.IsNotError;
   }
 
   SetTabInfo = async (tabInfo: browser.tabs.Tab): Promise<boolean> => {
     this.IsActive = tabInfo.active;
     this.WindowID = tabInfo.windowId;
     this.TabID = tabInfo.id;
-    this.Index = tabInfo.index;
+    // this.Index = tabInfo.index;
+    this.Status = tabInfo.status;
     this.Title = tabInfo.title;
     this.URL = tabInfo.url;
     this.IsPinned = tabInfo.pinned;

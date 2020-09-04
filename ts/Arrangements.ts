@@ -5,28 +5,23 @@ const DirectionArray = [
   "Left"
 ] as const;
 type Direction = typeof DirectionArray[number];
-class RowSetting {
+
+class ColumnSetting {
   Type: string;
   MaxColumns: number;
-  constructor(myType: string = "", maxColumns: number = 0) {
+  Size: string;
+  constructor(myType: string = "", maxColumns: number = -1, size: string = "big") {
+    this.Size = size;
     this.Type = myType;
     this.MaxColumns = maxColumns;
   }
 }
-class ColumnSetting {
-  Row: RowSetting;
-  Size: string;
-  constructor(row: RowSetting = new RowSetting(), size: string = "big") {
-    this.Size = size;
-    this.Row = row;
-  }
-}
 class StartPosition {
-  Row: number;
+  Index: number;
   Column: number;
-  constructor(row: number = 0, column: number = 0) {
+  constructor(column: number = 0, index: number = 0) {
     this.Column = column;
-    this.Row = row;
+    this.Index = index;
   }
 }
 class Arrangement {

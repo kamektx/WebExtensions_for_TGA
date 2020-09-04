@@ -1,19 +1,15 @@
 declare const DirectionArray: readonly ["Down", "Up", "Right", "Left"];
 declare type Direction = typeof DirectionArray[number];
-declare class RowSetting {
+declare class ColumnSetting {
     Type: string;
     MaxColumns: number;
-    constructor(myType?: string, maxColumns?: number);
-}
-declare class ColumnSetting {
-    Row: RowSetting;
     Size: string;
-    constructor(row?: RowSetting, size?: string);
+    constructor(myType?: string, maxColumns?: number, size?: string);
 }
 declare class StartPosition {
-    Row: number;
+    Index: number;
     Column: number;
-    constructor(row?: number, column?: number);
+    constructor(column?: number, index?: number);
 }
 declare class Arrangement {
     Column: ColumnSetting[];

@@ -5,7 +5,7 @@ class SendingObject {
   Ready: Promise<boolean>;
   IsReady: boolean;
   IsNotError: boolean;
-  ActiveWindowID?: number;
+  ActiveWindowID: number | undefined;
   Arrangements: Arrangements;
   Windows: MyWindows;
   UnmanagedWindows: Set<number>;
@@ -80,6 +80,7 @@ class SendingObject {
     this.IsReady = true;
     return this.IsNotError;
   }
+
   Verify = async (): Promise<boolean> => {
     if (await this.Ready === false || this.IsNotError === false) {
       this.Error.ThrowError("Sending Object");
@@ -104,6 +105,7 @@ class SendingObject {
     }
     return this.IsNotError;
   }
+
   AddWindow = async (windowInfo: browser.windows.Window): Promise<boolean> => {
     const isNotError = await this.Ready;
     if (isNotError === false) {
@@ -120,6 +122,9 @@ class SendingObject {
     }
     this.UnmanagedWindows.delete(windowID);
     if (this.Windows.has(windowID)) {
+      if (this.ActiveWindowID === windowID) {
+        this.ActiveWindowID = undefined;
+      }
       this.ReadyInstances.delete(this.Windows.get(windowID)!);
       this.Windows.delete(windowID);
     }
@@ -134,16 +139,16 @@ class SendingObject {
     this.IsReady = false;
     this.Ready = (async () => {
       if (this.ActiveWindowID !== undefined) {
-        if (this.Windows.get(this.ActiveWindowID) !== undefined && await this.Windows.get(this.ActiveWindowID)!.Ready) {
+        if (this.Windows.has(this.ActiveWindowID) && await this.Windows.get(this.ActiveWindowID)!.Ready) {
           this.Windows.get(this.ActiveWindowID)!.IsActive = false;
         } else {
           this.IsNotError = false;
         }
       }
-      if (this.UnmanagedWindows.has(windowID)) {
+      if (windowID === -1 || this.UnmanagedWindows.has(windowID)) {
         this.ActiveWindowID = undefined;
       } else {
-        if (this.Windows.get(windowID) !== undefined && await this.Windows.get(windowID)!.Ready) {
+        if (this.Windows.has(windowID) && await this.Windows.get(windowID)!.Ready) {
           this.Windows.get(windowID)!.IsActive = true;
           this.ActiveWindowID = windowID;
         } else {
@@ -157,7 +162,7 @@ class SendingObject {
   }
   constructor() {
     this.IsNotError = true;
-    this.ActiveWindowID = -1;
+    this.ActiveWindowID = undefined;
     this.Arrangements = new Arrangements();
     this.Windows = new MyWindows();
     this.UnmanagedWindows = new Set<number>();

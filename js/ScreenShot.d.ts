@@ -1,0 +1,1 @@
+//# sourceMappingURL=ScreenShot.d.ts.map

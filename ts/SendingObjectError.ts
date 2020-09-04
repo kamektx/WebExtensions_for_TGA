@@ -23,6 +23,7 @@ class SendingObjectError {
   }
   ThrowError(errString: string) {
     app.ErrorLog.push(errString + " : " + new Date().toTimeString());
+    console.log(errString + " : " + new Date().toTimeString());
     if (this.IsError) {
       this.TimerMilliSeconds = SendingObjectError.WaitForErrorHandle;
       return;
