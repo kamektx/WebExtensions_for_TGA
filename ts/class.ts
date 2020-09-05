@@ -1,14 +1,3 @@
-class ScreenShot {
-  ID?: string;
-  Format?: ("jpeg" | "png")
-  Data?: string;
-  TabID?: number;
-  URL?: string;
-  toJSON() {
-    return this.ID + "." + this.Format
-  }
-}
-
 class App {
   Port: browser.runtime.Port;
   SendingObject: SendingObject;
