@@ -29,6 +29,13 @@ class MyWindow {
             }
             return this.IsNotError;
         };
+        this.Verify2 = async () => {
+            if (this.Ready2.IsError) {
+                this.SendingObject.Error.ThrowError("MyWindow : WindowID = " + this.WindowID);
+                return false;
+            }
+            return true;
+        };
         this.ActiveTabChanged = async (tabID) => {
             const isNotError = await this.Ready;
             if (isNotError === false) {
@@ -232,6 +239,7 @@ class MyWindow {
                 }
             }
         };
+        this.Ready2 = new Ready();
         this.IsNotError = true;
         this.IsActive = false;
         this.RecentTabs = new Array();
@@ -262,6 +270,7 @@ class MyWindow {
         this.SendingObject.ReadyInstances.add(this);
         Object.defineProperties(this, {
             Ready: { enumerable: false },
+            Ready2: { enumerable: false },
             Tabs2: { enumerable: false },
             SendingObject: { enumerable: false }
         });

@@ -1,6 +1,7 @@
 /// <reference types="./node_modules/@types/firefox-webext-browser" />
 declare class MyWindow {
     Ready: Promise<boolean>;
+    Ready2: Ready;
     IsReady: boolean;
     IsNotError: boolean;
     IsActive: boolean;
@@ -13,6 +14,7 @@ declare class MyWindow {
     Tabs2: MyTabs;
     Verify: (sizeCheck?: boolean) => Promise<boolean>;
     Verify_DontWaitReady: (sizeCheck?: boolean) => Promise<boolean>;
+    Verify2: () => Promise<boolean>;
     ActiveTabChanged: (tabID: number) => Promise<boolean>;
     CreateTab: (tabInfo: browser.tabs.Tab) => Promise<boolean>;
     RemoveTab: (tabID: number) => Promise<boolean>;

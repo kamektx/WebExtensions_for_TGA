@@ -1,5 +1,6 @@
 class MyWindow {
   Ready: Promise<boolean>;
+  Ready2: Ready;
   IsReady: boolean;
   IsNotError: boolean;
   IsActive: boolean;
@@ -38,6 +39,13 @@ class MyWindow {
       }
     }
     return this.IsNotError;
+  }
+  Verify2 = async (): Promise<boolean> => {
+    if (this.Ready2.IsError) {
+      this.SendingObject.Error.ThrowError("MyWindow : WindowID = " + this.WindowID);
+      return false;
+    }
+    return true;
   }
 
   public ActiveTabChanged = async (tabID: number): Promise<boolean> => {
@@ -246,6 +254,7 @@ class MyWindow {
     }
   }
   public constructor(arg: (number | browser.windows.Window)) {
+    this.Ready2 = new Ready();
     this.IsNotError = true;
     this.IsActive = false;
     this.RecentTabs = new Array<number>();
@@ -275,6 +284,7 @@ class MyWindow {
     this.SendingObject.ReadyInstances.add(this);
     Object.defineProperties(this, {
       Ready: { enumerable: false },
+      Ready2: { enumerable: false },
       Tabs2: { enumerable: false },
       SendingObject: { enumerable: false }
     });
