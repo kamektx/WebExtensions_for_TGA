@@ -106,7 +106,6 @@ if (isEventActive) {
         myWindow.ReplaceTab(addedTabID, removedTabID);
     });
     browser.tabs.onUpdated.addListener(async (tabID, changeInfo, tabInfo) => {
-        var _a;
         if (tabInfo.windowId === undefined) {
             throw new Error("Couldn't get the windowID");
         }
@@ -123,7 +122,7 @@ if (isEventActive) {
                     app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onUpdated");
                     return;
                 case "managed":
-                    (_a = app.SendingObject.Windows.get(tabInfo.windowId)) === null || _a === void 0 ? void 0 : _a.UpdateTab(tabID);
+                    app.SendingObject.Windows.get(tabInfo.windowId).UpdateTab(tabID);
                     break;
             }
         }

@@ -119,7 +119,7 @@ if (isEventActive) {
           app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onUpdated");
           return;
         case "managed":
-          app.SendingObject.Windows.get(tabInfo.windowId)?.UpdateTab(tabID);
+          app.SendingObject.Windows.get(tabInfo.windowId)!.UpdateTab(tabID);
           break;
       }
     }

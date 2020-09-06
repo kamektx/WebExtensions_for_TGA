@@ -2,48 +2,34 @@
 class MyTab {
     constructor(myWindow, arg) {
         this.Verify = async () => {
-            if (await this.Ready === false || this.IsNotError === false) {
+            if (this.Ready2.IsNotError === false) {
                 this.SendingObject.Error.ThrowError(`MyTab : WindowID = ${this.WindowID} : TabID = ${this.TabID}`);
-                this.IsNotError = false;
+                return false;
             }
-            return this.IsNotError;
-        };
-        this.Verify_DontWaitReady = async () => {
-            if (this.IsNotError === false) {
-                this.SendingObject.Error.ThrowError(`MyTab : WindowID = ${this.WindowID} : TabID = ${this.TabID}`);
-                this.IsNotError = false;
-            }
-            return this.IsNotError;
+            return true;
         };
         this.Query = async () => {
             const tabInfo = await browser.tabs.get(this.TabID).catch(() => {
-                this.IsNotError = false;
                 return undefined;
             });
             return tabInfo;
         };
         this.Update = async () => {
-            const isReady = await this.Ready;
-            if (isReady === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
+            return this.Ready2.AddWriteTask(async () => {
                 const tabInfo = await this.Query();
+                let result;
                 if (tabInfo !== undefined) {
-                    this.IsNotError = await this.SetTabInfo(tabInfo);
+                    return this.SetTabInfo(tabInfo);
                 }
-                this.IsReady = true;
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return this.IsNotError;
+                else {
+                    return false;
+                }
+            });
         };
-        this.SetTabInfo = async (tabInfo) => {
+        this.SetTabInfo = (tabInfo) => {
             this.IsActive = tabInfo.active;
             this.WindowID = tabInfo.windowId;
             this.TabID = tabInfo.id;
-            // this.Index = tabInfo.index;
             this.Status = tabInfo.status;
             this.Title = tabInfo.title;
             this.URL = tabInfo.url;
@@ -51,11 +37,11 @@ class MyTab {
             this.IsHidden = tabInfo.hidden;
             return true;
         };
-        this.IsNotError = true;
+        this.Ready2 = new Ready();
+        this.Ready2.AddVerifyTask(this.Verify);
         this.SendingObject = app.SendingObject;
         this.MyWindow = myWindow;
-        this.IsReady = false;
-        this.Ready = (async () => {
+        this.Ready2.AddWriteTask(async () => {
             let tabInfo;
             if (typeof arg === "number") {
                 this.TabID = arg;
@@ -65,17 +51,15 @@ class MyTab {
                 tabInfo = arg;
             }
             if (tabInfo !== undefined) {
-                this.IsNotError = await this.SetTabInfo(tabInfo);
+                return this.SetTabInfo(tabInfo);
             }
             else {
-                this.IsNotError = false;
+                return false;
             }
-            this.IsReady = true;
-            return await this.Verify_DontWaitReady();
-        })();
-        this.SendingObject.ReadyInstances.add(this);
+        });
+        this.SendingObject.ReadyInstances.add(this.Ready2);
         Object.defineProperties(this, {
-            Ready: { enumerable: false },
+            Ready2: { enumerable: false },
             SendingObject: { enumerable: false },
             MyWindow: { enumerable: false }
         });

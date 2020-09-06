@@ -5,6 +5,6 @@ declare class ScreenCaptureTimer {
     static readonly TimeToRecaptureInactiveWindow: number;
     Go: boolean;
     Run: () => Promise<void>;
-    constructor(sendingObject: SendingObject);
+    constructor();
 }
 //# sourceMappingURL=ScreenCaptureTimer.d.ts.map

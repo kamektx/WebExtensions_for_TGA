@@ -3,18 +3,15 @@ class SendingObjectError {
     constructor(sendingObject) {
         this.Timer = async () => {
             while (this.TimerMilliSeconds > 0) {
+                await Thread.Delay(SendingObjectError.TimerTickTime);
+                this.TimerMilliSeconds -= SendingObjectError.TimerTickTime;
                 if (!this.IsError || app.SendingObject !== this.SendingObject) {
                     return false;
                 }
-                await Thread.Delay(SendingObjectError.TimerTickTime);
-                this.TimerMilliSeconds -= SendingObjectError.TimerTickTime;
             }
-            this.IsError = false;
             return await this.HandleError();
         };
         this.HandleError = async () => {
-            var _a;
-            await ((_a = app.SendingObject) === null || _a === void 0 ? void 0 : _a.Ready);
             app.SendingObject = new SendingObject();
             return true;
         };

@@ -1,8 +1,6 @@
 class ScreenShot {
   static readonly Quality = 80;
-  Ready: Promise<boolean>;
-  IsReady: boolean;
-  IsNotError: boolean;
+  Ready2: Ready;
   IsCaputured: boolean;
   ID?: string;
   Format: ("jpeg" | "png")
@@ -63,6 +61,7 @@ class ScreenShot {
   }
 
   Capture = async (): Promise<boolean> => {
+    await this.SetTabInformation();
     this.IsCaputured = true;
     this.Data = await browser.tabs.captureVisibleTab(this.MyTab.WindowID!, { format: this.Format, quality: ScreenShot.Quality }).catch(() => {
       this.IsCaputured = false;
@@ -71,23 +70,31 @@ class ScreenShot {
     if (this.IsCaputured === true) {
       this.CreateID();
     }
+    this.ResetTimer();
+    this.SendJSON(); // DON'T AWAIT!!
     return this.IsCaputured;
   }
 
-  public Recapture = async (): Promise<boolean> => {
-    if (await this.MyTab.Ready === false) {
-      this.IsNotError = false;
-    }
-    if (this.TabURL !== this.MyTab.URL ||
-      this.TabStatus !== this.MyTab.Status ||
-      this.TabTitle !== this.MyTab.Title) {
-      this.IsReady = false;
-      this.Ready = (async () => {
+  CheckTabUpdated = async (): Promise<boolean> => {
+    return this.MyTab.Ready2.AddReadTask(async () => {
+      return this.TabURL !== this.MyTab.URL ||
+        this.TabStatus !== this.MyTab.Status ||
+        this.TabTitle !== this.MyTab.Title;
+    });
+  }
 
-        this.IsReady = true;
-        return this.IsNotError;
-      })();
-    } else {
+  public Recapture = async (): Promise<boolean> => {
+    return await this.Ready2.AddWriteTask(async () => {
+      if (this.IsCaputured === false) {
+        const result = await this.Capture();
+        this.IsFirstTime = true;
+        return result;
+      }
+      if (await this.CheckTabUpdated()) {
+        const result = await this.Capture();
+        this.IsFirstTime = true;
+        return result;
+      }
       if (this.IsFirstTime) {
         this.FirstTimeMilliSeconds -= ScreenCaptureTimer.TickTime;
       } else if (this.MyTab.WindowID === this.SendingObject.ActiveWindowID) {
@@ -98,48 +105,60 @@ class ScreenShot {
       if (this.FirstTimeMilliSeconds <= 0 ||
         this.ActiveWindowMilliSeconds <= 0 ||
         this.InactiveWindowMilliSeconds <= 0) {
-        await this.Capture();
+        const result = await this.Capture();
+        this.IsFirstTime = false;
+        return result;
       }
-    }
-    return this.IsNotError;
+      return true;
+    });
+
   }
 
   SetTabInformation = async (): Promise<boolean> => {
-    if (await this.MyTab.Ready === false) {
-      this.IsNotError = false;
-    }
-    this.TabID = this.MyTab.TabID;
-    this.TabURL = this.MyTab.URL;
-    this.TabStatus = this.MyTab.Status;
-    this.TabTitle = this.MyTab.Title;
-    return this.IsNotError;
+    return await this.MyTab.Ready2.AddReadTask(async () => {
+      this.TabID = this.MyTab.TabID;
+      this.TabURL = this.MyTab.URL;
+      this.TabStatus = this.MyTab.Status;
+      this.TabTitle = this.MyTab.Title;
+      return true;
+    });
   }
 
   public toJSON() {
     return this.ID + "." + this.Format;
   }
+
+  public SendJSON = async (): Promise<boolean> => {
+    return await this.Ready2.AddReadTask(async () => {
+      if (this.IsCaputured) {
+        const obj = {
+          FileName: this.ID + "." + this.Format,
+          Data: this.Data
+        }
+        app.Port.postMessage(obj);
+      }
+      return true;
+    });
+  }
+
   ResetTimer() {
     this.ActiveWindowMilliSeconds = ScreenCaptureTimer.TimeToRecaptureActiveWindow;
     this.FirstTimeMilliSeconds = ScreenCaptureTimer.TimeToRecaptureFirstTime;
     this.InactiveWindowMilliSeconds = ScreenCaptureTimer.TimeToRecaptureInactiveWindow;
   }
   public constructor(myTab: MyTab) {
+    this.Ready2 = new Ready();
     this.Format = "jpeg"
     this.IsFirstTime = true;
-    this.IsNotError = true;
     this.IsCaputured = true;
-    this.ActiveWindowMilliSeconds = ScreenCaptureTimer.TimeToRecaptureActiveWindow;
-    this.FirstTimeMilliSeconds = ScreenCaptureTimer.TimeToRecaptureFirstTime;
-    this.InactiveWindowMilliSeconds = ScreenCaptureTimer.TimeToRecaptureInactiveWindow;
+    this.ActiveWindowMilliSeconds = 0;
+    this.FirstTimeMilliSeconds = 0;
+    this.InactiveWindowMilliSeconds = 0;
     this.SendingObject = app.SendingObject;
     this.MyTab = myTab;
-    this.IsReady = false;
-    this.Ready = (async () => {
-      this.IsNotError = true;
-      await this.Capture();
-      this.IsReady = true;
-      return this.IsNotError;
-    })();
-    this.SendingObject.ReadyInstances.add(this);
+    this.Ready2.AddWriteTask(async () => {
+      return await this.Capture();
+    }, "ignore");
+    this.SendingObject.ReadyInstances.add(this.Ready2);
   }
 }

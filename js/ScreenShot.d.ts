@@ -1,8 +1,6 @@
 declare class ScreenShot {
     static readonly Quality = 80;
-    Ready: Promise<boolean>;
-    IsReady: boolean;
-    IsNotError: boolean;
+    Ready2: Ready;
     IsCaputured: boolean;
     ID?: string;
     Format: ("jpeg" | "png");
@@ -20,9 +18,11 @@ declare class ScreenShot {
     CreateID(): void;
     EncodeBase32(randomArray: Uint32Array): string;
     Capture: () => Promise<boolean>;
+    CheckTabUpdated: () => Promise<boolean>;
     Recapture: () => Promise<boolean>;
     SetTabInformation: () => Promise<boolean>;
     toJSON(): string;
+    SendJSON: () => Promise<boolean>;
     ResetTimer(): void;
     constructor(myTab: MyTab);
 }

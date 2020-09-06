@@ -1,34 +1,20 @@
 "use strict";
 class MyWindow {
     constructor(arg) {
-        this.Verify = async (sizeCheck = false) => {
-            if (await this.Ready === false || this.IsNotError === false) {
-                this.SendingObject.Error.ThrowError("MyWindow : WindowID = " + this.WindowID);
-                this.IsNotError = false;
-            }
-            if (sizeCheck) {
-                const tabsInfo = await browser.tabs.query({ windowId: this.WindowID });
-                if (tabsInfo.length !== this.Tabs.size) {
-                    this.SendingObject.Error.ThrowError("MyWindow : The number of tabs won't match. : WindowID = " + this.WindowID);
-                    this.IsNotError = false;
-                }
-            }
-            return this.IsNotError;
-        };
-        this.Verify_DontWaitReady = async (sizeCheck = false) => {
-            if (this.IsNotError === false) {
-                this.SendingObject.Error.ThrowError("MyWindow : WindowID = " + this.WindowID);
-                this.IsNotError = false;
-            }
-            if (sizeCheck) {
-                const tabsInfo = await browser.tabs.query({ windowId: this.WindowID });
-                if (tabsInfo.length !== this.Tabs.size) {
-                    this.SendingObject.Error.ThrowError("MyWindow : The number of tabs won't match. : WindowID = " + this.WindowID);
-                    this.IsNotError = false;
-                }
-            }
-            return this.IsNotError;
-        };
+        // Verify = async (sizeCheck: boolean = false): Promise<boolean> => {
+        //   if (await this.Ready === false || this.IsNotError === false) {
+        //     this.SendingObject.Error.ThrowError("MyWindow : WindowID = " + this.WindowID);
+        //     this.IsNotError = false;
+        //   }
+        //   if (sizeCheck) {
+        //     const tabsInfo = await browser.tabs.query({ windowId: this.WindowID });
+        //     if (tabsInfo.length !== this.Tabs.size) {
+        //       this.SendingObject.Error.ThrowError("MyWindow : The number of tabs won't match. : WindowID = " + this.WindowID);
+        //       this.IsNotError = false;
+        //     }
+        //   }
+        //   return this.IsNotError;
+        // }
         this.Verify2 = async () => {
             if (this.Ready2.IsError) {
                 this.SendingObject.Error.ThrowError("MyWindow : WindowID = " + this.WindowID);
@@ -37,22 +23,25 @@ class MyWindow {
             return true;
         };
         this.ActiveTabChanged = async (tabID) => {
-            const isNotError = await this.Ready;
-            if (isNotError === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
+            return await this.Ready2.AddWriteTask(async () => {
                 if (this.ActiveTabID !== undefined) {
-                    if (this.Tabs.get(this.ActiveTabID) !== undefined && await this.Tabs.get(this.ActiveTabID).Ready) {
-                        this.Tabs.get(this.ActiveTabID).IsActive = false;
+                    if (this.Tabs.has(this.ActiveTabID)) {
+                        const myTab = this.Tabs.get(this.ActiveTabID);
+                        await myTab.Ready2.AddWriteTask(async () => {
+                            myTab.IsActive = false;
+                            return true;
+                        });
                     }
                     else {
-                        this.IsNotError = false;
+                        return false;
                     }
                 }
-                if (this.Tabs.get(tabID) !== undefined && await this.Tabs.get(tabID).Ready) {
-                    this.Tabs.get(tabID).IsActive = true;
+                if (this.Tabs.has(tabID)) {
+                    const myTab = this.Tabs.get(tabID);
+                    await myTab.Ready2.AddWriteTask(async () => {
+                        myTab.IsActive = true;
+                        return true;
+                    });
                     const index_RecentTabs = this.RecentTabs.indexOf(tabID);
                     if (index_RecentTabs !== -1) {
                         this.RecentTabs.splice(index_RecentTabs, 1);
@@ -60,82 +49,44 @@ class MyWindow {
                     this.RecentTabs.unshift(tabID);
                 }
                 else {
-                    this.IsNotError = false;
+                    return false;
                 }
                 this.ActiveTabID = tabID;
-                this.IsReady = true;
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return await this.Verify();
+                return true;
+            });
         };
         this.CreateTab = async (tabInfo) => {
-            const isNotError = await this.Ready;
-            if (isNotError === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
+            return await this.Ready2.AddWriteTask(async () => {
                 this.InsertTabInfo(tabInfo);
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return await this.Verify();
+                return true;
+            });
         };
         this.RemoveTab = async (tabID) => {
-            if (await this.Ready === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
-                this.RemoveTabID(tabID);
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return await this.Verify();
+            return await this.Ready2.AddWriteTask(async () => {
+                return this.RemoveTabID(tabID);
+            });
         };
         this.AttachTab = async (tabID) => {
-            if (await this.Ready === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
+            return await this.Ready2.AddWriteTask(async () => {
                 const tabInfo = await browser.tabs.get(tabID).catch(() => {
-                    this.IsNotError = false;
                     return undefined;
                 });
                 if (tabInfo !== undefined) {
                     this.InsertTabInfo(tabInfo);
                 }
-                for (const tabInfo2 of this.Tabs.values()) {
-                    tabInfo2.Update();
+                else {
+                    return false;
                 }
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return await this.Verify();
+                return true;
+            });
         };
         this.DetachTab = async (tabID) => {
-            if (await this.Ready === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
-                this.RemoveTabID(tabID);
-                for (const tabInfo2 of this.Tabs.values()) {
-                    tabInfo2.Update();
-                }
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return await this.Verify();
+            return await this.Ready2.AddWriteTask(async () => {
+                return this.RemoveTabID(tabID);
+            });
         };
         this.MoveTab = async () => {
-            if (await this.Ready === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
+            return await this.Ready2.AddWriteTask(async () => {
                 this.TabsInOrder = new Array();
                 const tabsInfo = await browser.tabs.query({ windowId: this.WindowID });
                 for (const tabInfo of tabsInfo) {
@@ -146,46 +97,38 @@ class MyWindow {
                         throw new Error("Couldn't get the TabID");
                     }
                 }
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return await this.Verify(true);
+                return true;
+            });
         };
         this.ReplaceTab = async (addedTabID, removedTabID) => {
-            if (await this.Ready === false) {
-                return false;
-            }
-            this.IsReady = false;
-            this.Ready = (async () => {
-                this.RemoveTabID(removedTabID);
+            return await this.Ready2.AddWriteTask(async () => {
+                const result1 = this.RemoveTabID(removedTabID);
                 if (this.Tabs.has(addedTabID)) {
                     await this.Tabs.get(addedTabID).Update();
                 }
                 else {
                     const tabInfo = await browser.tabs.get(addedTabID).catch(() => {
-                        this.IsNotError = false;
                         return undefined;
                     });
                     if (tabInfo !== undefined) {
                         this.InsertTabInfo(tabInfo);
                     }
+                    else {
+                        return false;
+                    }
                 }
-                return this.IsNotError;
-            })();
-            await this.Ready;
-            return await this.Verify();
+                return result1;
+            });
         };
         this.UpdateTab = async (tabID) => {
-            if (await this.Ready === false) {
-                return false;
-            }
-            if (this.Tabs.has(tabID) === false) {
-                this.IsNotError = false;
-            }
-            else {
-                this.Tabs.get(tabID).Update();
-            }
-            return await this.Verify();
+            return await this.Ready2.AddReadTask(async () => {
+                if (this.Tabs.has(tabID) === false) {
+                    return false;
+                }
+                else {
+                    return await this.Tabs.get(tabID).Update();
+                }
+            });
         };
         this.SetWindowInfo = async (windowInfo) => {
             if (windowInfo.type !== "normal") {
@@ -197,7 +140,7 @@ class MyWindow {
             for (const tabInfo of tabsInfo) {
                 this.SetTabInfo(tabInfo);
             }
-            return this.IsNotError;
+            return true;
         };
         this.SetTabInfo = (tabInfo) => {
             if (tabInfo.id !== undefined) {
@@ -225,10 +168,10 @@ class MyWindow {
             const index_TabsInOrder = this.TabsInOrder.indexOf(tabID);
             const index_RecentTabs = this.RecentTabs.indexOf(tabID);
             if (index_TabsInOrder === -1 || this.Tabs.has(tabID) === false) {
-                this.IsNotError = false;
+                return false;
             }
             else {
-                this.SendingObject.ReadyInstances.delete(this.Tabs.get(tabID));
+                this.SendingObject.ReadyInstances.delete(this.Tabs.get(tabID).Ready2);
                 this.Tabs.delete(tabID);
                 this.TabsInOrder.splice(index_TabsInOrder, 1);
                 if (index_RecentTabs !== -1) {
@@ -238,22 +181,22 @@ class MyWindow {
                     this.ActiveTabID = undefined;
                 }
             }
+            return true;
         };
         this.Ready2 = new Ready();
-        this.IsNotError = true;
         this.IsActive = false;
         this.RecentTabs = new Array();
         this.TabsInOrder = new Array();
         this.Tabs = new MyTabs();
         this.Tabs2 = new MyTabs();
         this.SendingObject = app.SendingObject;
-        this.IsReady = false;
-        this.Ready = (async () => {
+        this.Ready2.AddVerifyTask(this.Verify2);
+        this.Ready2.AddWriteTask(async () => {
+            let result;
             let windowInfo;
             if (typeof arg === "number") {
                 const windowID = arg;
                 windowInfo = await browser.windows.get(windowID, { populate: false }).catch(() => {
-                    this.IsNotError = false;
                     return undefined;
                 });
             }
@@ -261,15 +204,15 @@ class MyWindow {
                 windowInfo = arg;
             }
             if (windowInfo !== undefined) {
-                await this.SetWindowInfo(windowInfo);
+                result = await this.SetWindowInfo(windowInfo);
             }
-            this.IsNotError = await this.Verify_DontWaitReady(true);
-            this.IsReady = true;
-            return this.IsNotError;
-        })();
-        this.SendingObject.ReadyInstances.add(this);
+            else {
+                return false;
+            }
+            return result;
+        }, "error");
+        this.SendingObject.ReadyInstances.add(this.Ready2);
         Object.defineProperties(this, {
-            Ready: { enumerable: false },
             Ready2: { enumerable: false },
             Tabs2: { enumerable: false },
             SendingObject: { enumerable: false }

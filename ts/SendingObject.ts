@@ -1,20 +1,15 @@
-interface ReadyInstance {
-  Ready: Promise<boolean>
-}
 class SendingObject {
-  Ready: Promise<boolean>;
-  IsReady: boolean;
-  IsNotError: boolean;
+  Ready2: Ready;
   ActiveWindowID: number | undefined;
   Arrangements: Arrangements;
   Windows: MyWindows;
   UnmanagedWindows: Set<number>;
   Error: SendingObjectError;
-  ReadyInstances: Set<ReadyInstance>;
+  ReadyInstances: Set<Ready>;
 
   AllReadyResolved = async (): Promise<boolean> => {
     for (const inst of this.ReadyInstances) {
-      const isNotError = await inst.Ready;
+      const isNotError = await inst.Wait();
       if (isNotError === false) {
         return false;
       }
@@ -22,169 +17,143 @@ class SendingObject {
     return true;
   }
 
-  FindWindowWhichHasTheTabID = async (tabID: number): Promise<(MyWindow | undefined)> => {
-    const isNotError = await this.AllReadyResolved();
-    if (isNotError === false) {
-      return undefined;
-    }
-    if (this.ActiveWindowID !== undefined) {
-      if (this.Windows.has(this.ActiveWindowID)) {
-        if (this.Windows.get(this.ActiveWindowID)!.Tabs.has(tabID)) {
-          return this.Windows.get(this.ActiveWindowID)!;
+  public FindWindowWhichHasTheTabID = async (tabID: number): Promise<(MyWindow | undefined)> => {
+    const result = await this.Ready2.AddReadTaskAny(async (): Promise<MyWindow | undefined> => {
+      const activeWindowID = this.ActiveWindowID;
+      if (activeWindowID !== undefined) {
+        if (this.Windows.has(activeWindowID)) {
+          const myWindow = this.Windows.get(activeWindowID)!;
+          if (await myWindow.Ready2.AddReadTask(async () => myWindow.Tabs.has(tabID), "ignore")) {
+            return myWindow;
+          }
+        } else {
+          this.Ready2.AddWriteTask(async () => false);
+          return undefined;
         }
-      } else {
-        this.IsNotError = false;
-        this.Error.ThrowError("Sending Object : this.Windows.has(this.ActiveWindowID) returned false.");
-        return undefined;
       }
-    }
-    for (const myWindow of this.Windows.values()) {
-      if (myWindow.Tabs.has(tabID)) {
-        return myWindow;
+      for (const myWindow of this.Windows.values()) {
+        if (await myWindow.Ready2.AddReadTask(async () => myWindow.Tabs.has(tabID), "ignore")) {
+          return myWindow;
+        }
       }
-    }
-    return undefined;
+      return undefined;
+    });
+    return result;
   }
 
-  HasWindowID = async (windowID: number): Promise<("false" | "managed" | "unmanaged")> => {
-    const isNotError = await this.Ready;
-    if (isNotError === false) {
-      return "false";
-    }
-    if (this.Windows.has(windowID)) {
-      return "managed";
-    } else if (this.UnmanagedWindows.has(windowID)) {
-      return "unmanaged";
-    } else {
-      return "false";
-    }
+  public HasWindowID = async (windowID: number): Promise<("false" | "managed" | "unmanaged")> => {
+    return await this.Ready2.AddReadTaskAny(async (): Promise<("false" | "managed" | "unmanaged")> => {
+      if (this.Windows.has(windowID)) {
+        return "managed";
+      } else if (this.UnmanagedWindows.has(windowID)) {
+        return "unmanaged";
+      } else {
+        return "false";
+      }
+    }) ?? "false";
   }
 
   SetWindowsInfo = async (windowsInfo: browser.windows.Window[]): Promise<boolean> => {
     for (const windowInfo of windowsInfo) {
       if (windowInfo.id === undefined) {
-        this.IsNotError = false;
-        break;
+        throw new Error();
       }
       if (windowInfo.type !== "normal") {
-        this.UnmanagedWindows.add(windowInfo.id!);
+        this.UnmanagedWindows.add(windowInfo.id);
       } else {
-        if (windowInfo.id !== undefined) {
-          this.Windows.set(windowInfo.id, new MyWindow(windowInfo));
-          if (windowInfo.focused) {
-            this.ActiveWindowID = windowInfo.id;
-          }
+        this.Windows.set(windowInfo.id, new MyWindow(windowInfo));
+        if (windowInfo.focused) {
+          this.ActiveWindowID = windowInfo.id;
         }
       }
     }
-    this.IsReady = true;
-    return this.IsNotError;
+    return true;
   }
 
   Verify = async (): Promise<boolean> => {
-    if (await this.Ready === false || this.IsNotError === false) {
+    if (this.Ready2.IsNotError === false) {
       this.Error.ThrowError("Sending Object");
-      this.IsNotError = false;
+      return false;
     }
     const windowsInfo = await browser.windows.getAll({ populate: false });
     if (windowsInfo.length !== this.Windows.size + this.UnmanagedWindows.size) {
       this.Error.ThrowError("Sending Object : The number of windows won't match.");
-      this.IsNotError = false;
+      return false;
     }
-    return this.IsNotError;
-  }
-  Verify_DontWaitReady = async (): Promise<boolean> => {
-    if (this.IsNotError === false) {
-      this.Error.ThrowError("Sending Object");
-      this.IsNotError = false;
-    }
-    const windowsInfo = await browser.windows.getAll({ populate: false });
-    if (windowsInfo.length !== this.Windows.size + this.UnmanagedWindows.size) {
-      this.Error.ThrowError("Sending Object : The number of windows won't match.");
-      this.IsNotError = false;
-    }
-    return this.IsNotError;
+    return true;
   }
 
-  AddWindow = async (windowInfo: browser.windows.Window): Promise<boolean> => {
-    const isNotError = await this.Ready;
-    if (isNotError === false) {
-      return false;
-    }
-    this.IsReady = false;
-    this.Ready = this.SetWindowsInfo([windowInfo]);
-    return await this.Ready && this.Verify();
+  public AddWindow = async (windowInfo: browser.windows.Window): Promise<boolean> => {
+    return await this.Ready2.AddWriteTask(async () => {
+      return this.SetWindowsInfo([windowInfo]);
+    });
   }
-  RemoveWindow = async (windowID: number): Promise<boolean> => {
-    const isNotError = await this.Ready;
-    if (isNotError === false) {
-      return false;
-    }
-    this.UnmanagedWindows.delete(windowID);
-    if (this.Windows.has(windowID)) {
-      if (this.ActiveWindowID === windowID) {
-        this.ActiveWindowID = undefined;
+  public RemoveWindow = async (windowID: number): Promise<boolean> => {
+    return await this.Ready2.AddWriteTask(async () => {
+      this.UnmanagedWindows.delete(windowID);
+      if (this.Windows.has(windowID)) {
+        if (this.ActiveWindowID === windowID) {
+          this.ActiveWindowID = undefined;
+        }
+        this.ReadyInstances.delete(this.Windows.get(windowID)!.Ready2);
+        this.Windows.delete(windowID);
       }
-      this.ReadyInstances.delete(this.Windows.get(windowID)!);
-      this.Windows.delete(windowID);
-    }
-    this.IsNotError = await this.Verify();
-    return this.IsNotError;
+      return true;
+    });
   }
-  FocusChanged = async (windowID: number): Promise<boolean> => {
-    const isNotError = await this.Ready;
-    if (isNotError === false) {
-      return false;
-    }
-    this.IsReady = false;
-    this.Ready = (async () => {
+  public FocusChanged = async (windowID: number): Promise<boolean> => {
+    return await this.Ready2.AddWriteTask(async () => {
       if (this.ActiveWindowID !== undefined) {
-        if (this.Windows.has(this.ActiveWindowID) && await this.Windows.get(this.ActiveWindowID)!.Ready) {
-          this.Windows.get(this.ActiveWindowID)!.IsActive = false;
+        if (this.Windows.has(this.ActiveWindowID)) {
+          const myWindow = this.Windows.get(this.ActiveWindowID)!;
+          myWindow.Ready2.AddWriteTask(async () => {
+            myWindow.IsActive = false;
+            return true;
+          });
         } else {
-          this.IsNotError = false;
+          return false;
         }
       }
       if (windowID === -1 || this.UnmanagedWindows.has(windowID)) {
         this.ActiveWindowID = undefined;
       } else {
-        if (this.Windows.has(windowID) && await this.Windows.get(windowID)!.Ready) {
-          this.Windows.get(windowID)!.IsActive = true;
+        if (this.Windows.has(windowID)) {
+          const myWindow = this.Windows.get(windowID)!;
+          myWindow.Ready2.AddWriteTask(async () => {
+            myWindow.IsActive = true;
+            return true;
+          });
           this.ActiveWindowID = windowID;
         } else {
-          this.IsNotError = false;
+          return false;
         }
       }
-      this.IsReady = true;
-      return this.IsNotError;
-    })();
-    return await this.Ready;
+      return true;
+    });
   }
-  constructor() {
-    this.IsNotError = true;
+  public constructor() {
+    this.Ready2 = new Ready();
+    this.Ready2.AddVerifyTask(this.Verify);
     this.ActiveWindowID = undefined;
     this.Arrangements = new Arrangements();
     this.Windows = new MyWindows();
     this.UnmanagedWindows = new Set<number>();
     this.Error = new SendingObjectError(this);
     this.ReadyInstances = new Set();
-    this.IsReady = false;
-    this.Ready = (async () => {
-      const WindowsInfo = await browser.windows.getAll({ populate: false }).catch(() => {
+
+    this.Ready2.AddWriteTask(async () => {
+      const windowsInfo = await browser.windows.getAll({ populate: false }).catch(() => {
         return undefined;
       });
-      if (WindowsInfo !== undefined) {
-        await this.SetWindowsInfo(WindowsInfo);
-        this.IsNotError = await this.Verify_DontWaitReady();
+      if (windowsInfo !== undefined) {
+        return await this.SetWindowsInfo(windowsInfo);
       } else {
-        this.IsNotError = false;
+        return false;
       }
-      this.IsReady = true;
-      return this.IsNotError;
-    })();
-    this.ReadyInstances.add(this);
+    });
+    this.ReadyInstances.add(this.Ready2);
     Object.defineProperties(this, {
-      Ready: { enumerable: false },
+      Ready2: { enumerable: false },
       Error: { enumerable: false },
       UnmanagedWindows: { enumerable: false },
       ReadyInstances: { enumerable: false }
