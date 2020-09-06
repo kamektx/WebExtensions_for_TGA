@@ -159,6 +159,5 @@ class ScreenShot {
     this.Ready2.AddWriteTask(async () => {
       return await this.Capture();
     }, "ignore");
-    this.SendingObject.ReadyInstances.add(this.Ready2);
   }
 }

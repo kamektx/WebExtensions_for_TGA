@@ -57,7 +57,6 @@ class MyTab {
                 return false;
             }
         });
-        this.SendingObject.ReadyInstances.add(this.Ready2);
         Object.defineProperties(this, {
             Ready2: { enumerable: false },
             SendingObject: { enumerable: false },

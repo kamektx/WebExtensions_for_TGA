@@ -86,7 +86,6 @@ class ScreenShot {
         this.Ready2.AddWriteTask(async () => {
             return await this.Capture();
         }, "ignore");
-        this.SendingObject.ReadyInstances.add(this.Ready2);
     }
     CreateID() {
         const randomArray = new Uint32Array(4);

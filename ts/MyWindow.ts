@@ -181,7 +181,6 @@ class MyWindow {
     if (index_TabsInOrder === -1 || this.Tabs.has(tabID) === false) {
       return false;
     } else {
-      this.SendingObject.ReadyInstances.delete(this.Tabs.get(tabID)!.Ready2);
       this.Tabs.delete(tabID);
       this.TabsInOrder.splice(index_TabsInOrder, 1);
       if (index_RecentTabs !== -1) {
@@ -220,7 +219,6 @@ class MyWindow {
       }
       return result;
     }, "error");
-    this.SendingObject.ReadyInstances.add(this.Ready2);
     Object.defineProperties(this, {
       Ready2: { enumerable: false },
       Tabs2: { enumerable: false },

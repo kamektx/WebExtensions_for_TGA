@@ -5,17 +5,6 @@ class SendingObject {
   Windows: MyWindows;
   UnmanagedWindows: Set<number>;
   Error: SendingObjectError;
-  ReadyInstances: Set<Ready>;
-
-  AllReadyResolved = async (): Promise<boolean> => {
-    for (const inst of this.ReadyInstances) {
-      const isNotError = await inst.Wait();
-      if (isNotError === false) {
-        return false;
-      }
-    }
-    return true;
-  }
 
   public FindWindowWhichHasTheTabID = async (tabID: number): Promise<(MyWindow | undefined)> => {
     const result = await this.Ready2.AddReadTaskAny(async (): Promise<MyWindow | undefined> => {
@@ -70,16 +59,17 @@ class SendingObject {
     return true;
   }
 
+
   Verify = async (): Promise<boolean> => {
     if (this.Ready2.IsNotError === false) {
       this.Error.ThrowError("Sending Object");
       return false;
     }
-    const windowsInfo = await browser.windows.getAll({ populate: false });
-    if (windowsInfo.length !== this.Windows.size + this.UnmanagedWindows.size) {
-      this.Error.ThrowError("Sending Object : The number of windows won't match.");
-      return false;
-    }
+    // const windowsInfo = await browser.windows.getAll({ populate: false });
+    // if (windowsInfo.length !== this.Windows.size + this.UnmanagedWindows.size) {
+    //   this.Error.ThrowError("Sending Object : The number of windows won't match.");
+    //   return false;
+    // }
     return true;
   }
 
@@ -95,7 +85,6 @@ class SendingObject {
         if (this.ActiveWindowID === windowID) {
           this.ActiveWindowID = undefined;
         }
-        this.ReadyInstances.delete(this.Windows.get(windowID)!.Ready2);
         this.Windows.delete(windowID);
       }
       return true;
@@ -139,7 +128,6 @@ class SendingObject {
     this.Windows = new MyWindows();
     this.UnmanagedWindows = new Set<number>();
     this.Error = new SendingObjectError(this);
-    this.ReadyInstances = new Set();
 
     this.Ready2.AddWriteTask(async () => {
       const windowsInfo = await browser.windows.getAll({ populate: false }).catch(() => {
@@ -151,7 +139,6 @@ class SendingObject {
         return false;
       }
     });
-    this.ReadyInstances.add(this.Ready2);
     Object.defineProperties(this, {
       Ready2: { enumerable: false },
       Error: { enumerable: false },

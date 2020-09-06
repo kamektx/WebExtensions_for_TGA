@@ -1,15 +1,6 @@
 "use strict";
 class SendingObject {
     constructor() {
-        this.AllReadyResolved = async () => {
-            for (const inst of this.ReadyInstances) {
-                const isNotError = await inst.Wait();
-                if (isNotError === false) {
-                    return false;
-                }
-            }
-            return true;
-        };
         this.FindWindowWhichHasTheTabID = async (tabID) => {
             const result = await this.Ready2.AddReadTaskAny(async () => {
                 const activeWindowID = this.ActiveWindowID;
@@ -70,11 +61,11 @@ class SendingObject {
                 this.Error.ThrowError("Sending Object");
                 return false;
             }
-            const windowsInfo = await browser.windows.getAll({ populate: false });
-            if (windowsInfo.length !== this.Windows.size + this.UnmanagedWindows.size) {
-                this.Error.ThrowError("Sending Object : The number of windows won't match.");
-                return false;
-            }
+            // const windowsInfo = await browser.windows.getAll({ populate: false });
+            // if (windowsInfo.length !== this.Windows.size + this.UnmanagedWindows.size) {
+            //   this.Error.ThrowError("Sending Object : The number of windows won't match.");
+            //   return false;
+            // }
             return true;
         };
         this.AddWindow = async (windowInfo) => {
@@ -89,7 +80,6 @@ class SendingObject {
                     if (this.ActiveWindowID === windowID) {
                         this.ActiveWindowID = undefined;
                     }
-                    this.ReadyInstances.delete(this.Windows.get(windowID).Ready2);
                     this.Windows.delete(windowID);
                 }
                 return true;
@@ -135,7 +125,6 @@ class SendingObject {
         this.Windows = new MyWindows();
         this.UnmanagedWindows = new Set();
         this.Error = new SendingObjectError(this);
-        this.ReadyInstances = new Set();
         this.Ready2.AddWriteTask(async () => {
             const windowsInfo = await browser.windows.getAll({ populate: false }).catch(() => {
                 return undefined;
@@ -147,7 +136,6 @@ class SendingObject {
                 return false;
             }
         });
-        this.ReadyInstances.add(this.Ready2);
         Object.defineProperties(this, {
             Ready2: { enumerable: false },
             Error: { enumerable: false },

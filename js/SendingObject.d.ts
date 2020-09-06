@@ -6,8 +6,6 @@ declare class SendingObject {
     Windows: MyWindows;
     UnmanagedWindows: Set<number>;
     Error: SendingObjectError;
-    ReadyInstances: Set<Ready>;
-    AllReadyResolved: () => Promise<boolean>;
     FindWindowWhichHasTheTabID: (tabID: number) => Promise<(MyWindow | undefined)>;
     HasWindowID: (windowID: number) => Promise<("false" | "managed" | "unmanaged")>;
     SetWindowsInfo: (windowsInfo: browser.windows.Window[]) => Promise<boolean>;
