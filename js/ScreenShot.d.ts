@@ -1,6 +1,6 @@
 declare class ScreenShot {
-    static readonly Quality = 80;
-    Ready2: Ready;
+    static readonly Quality = 30;
+    readonly Ready2: Ready;
     IsCaputured: boolean;
     ID?: string;
     Format: ("jpeg" | "png");
@@ -24,6 +24,7 @@ declare class ScreenShot {
     toJSON(): string;
     SendJSON: () => Promise<boolean>;
     ResetTimer(): void;
+    destructor: () => void;
     constructor(myTab: MyTab);
 }
 //# sourceMappingURL=ScreenShot.d.ts.map

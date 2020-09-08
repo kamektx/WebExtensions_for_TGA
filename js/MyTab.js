@@ -37,9 +37,18 @@ class MyTab {
             this.IsHidden = tabInfo.hidden;
             return true;
         };
-        this.Ready2 = new Ready();
-        this.Ready2.AddVerifyTask(this.Verify);
+        this.destructor = () => {
+            this.Ready2.AddWriteTask(async () => {
+                var _a;
+                this.SendingObject.ReadyInstances.delete(this.Ready2);
+                (_a = this.ScreenShot) === null || _a === void 0 ? void 0 : _a.destructor();
+                return true;
+            });
+        };
         this.SendingObject = app.SendingObject;
+        this.Ready2 = new Ready(this.SendingObject);
+        this.Ready2.AddVerifyTask(this.Verify);
+        this.SendingObject.ReadyInstances.add(this.Ready2);
         this.MyWindow = myWindow;
         this.Ready2.AddWriteTask(async () => {
             let tabInfo;

@@ -1,6 +1,6 @@
 /// <reference types="./node_modules/@types/firefox-webext-browser" />
 declare class MyTab {
-    Ready2: Ready;
+    readonly Ready2: Ready;
     IsActive?: boolean;
     WindowID?: number;
     TabID?: number;
@@ -16,6 +16,7 @@ declare class MyTab {
     Query: () => Promise<browser.tabs.Tab | undefined>;
     Update: () => Promise<boolean>;
     SetTabInfo: (tabInfo: browser.tabs.Tab) => boolean;
+    destructor: () => void;
     constructor(myWindow: MyWindow, arg: (number | browser.tabs.Tab));
 }
 declare class MyTabs extends Map<number, MyTab> {

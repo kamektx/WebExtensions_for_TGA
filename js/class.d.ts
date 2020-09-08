@@ -2,7 +2,7 @@
 declare class App {
     Port: browser.runtime.Port;
     SendingObject: SendingObject;
-    SendingJson?: string;
+    SendingJSON?: string;
     ErrorLog: string[];
     constructor();
 }

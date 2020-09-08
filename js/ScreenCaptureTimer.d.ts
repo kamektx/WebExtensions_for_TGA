@@ -3,7 +3,7 @@ declare class ScreenCaptureTimer {
     static readonly TimeToRecaptureActiveWindow: number;
     static readonly TimeToRecaptureFirstTime: number;
     static readonly TimeToRecaptureInactiveWindow: number;
-    Go: boolean;
+    IsTimerRunning: boolean;
     Run: () => Promise<void>;
     constructor();
 }

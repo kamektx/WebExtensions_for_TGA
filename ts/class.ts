@@ -1,7 +1,7 @@
 class App {
   Port: browser.runtime.Port;
   SendingObject: SendingObject;
-  SendingJson?: string;
+  SendingJSON?: string;
   ErrorLog: string[];
   constructor() {
     this.Port = browser.runtime.connectNative("TGA_NativeMessaging_Cliant");

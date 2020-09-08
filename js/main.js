@@ -1,6 +1,7 @@
 "use strict";
 const app = new App();
 const isEventActive = true;
+const timer = new ScreenCaptureTimer();
 if (isEventActive) {
     browser.windows.onCreated.addListener(async (windowInfo) => {
         console.log("windows.onCreated");

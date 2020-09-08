@@ -2,7 +2,7 @@
 class ScreenCaptureTimer {
     constructor() {
         this.Run = async () => {
-            while (this.Go) {
+            while (this.IsTimerRunning) {
                 await Thread.Delay(ScreenCaptureTimer.TickTime);
                 app.SendingObject.Ready2.AddReadTask(async () => {
                     for (const myWindow of app.SendingObject.Windows.values()) {
@@ -10,7 +10,7 @@ class ScreenCaptureTimer {
                             if (myWindow.ActiveTabID !== undefined) {
                                 if (myWindow.Tabs.has(myWindow.ActiveTabID)) {
                                     const myTab = myWindow.Tabs.get(myWindow.ActiveTabID);
-                                    myTab.Ready2.AddWriteTask(async () => {
+                                    myTab.Ready2.AddReadTask(async () => {
                                         if (myTab.ScreenShot === undefined) {
                                             myTab.ScreenShot = new ScreenShot(myTab);
                                         }
@@ -31,12 +31,12 @@ class ScreenCaptureTimer {
                 });
             }
         };
-        this.Go = true;
+        this.IsTimerRunning = true;
         this.Run();
     }
 }
 ScreenCaptureTimer.TickTime = 3 * 1000;
-ScreenCaptureTimer.TimeToRecaptureActiveWindow = 30 * 1000;
+ScreenCaptureTimer.TimeToRecaptureActiveWindow = 60 * 1000;
 ScreenCaptureTimer.TimeToRecaptureFirstTime = 5 * 1000;
-ScreenCaptureTimer.TimeToRecaptureInactiveWindow = 180 * 1000;
+ScreenCaptureTimer.TimeToRecaptureInactiveWindow = 15 * 60 * 1000;
 //# sourceMappingURL=ScreenCaptureTimer.js.map

@@ -1,5 +1,5 @@
 class MyTab {
-  Ready2: Ready;
+  readonly Ready2: Ready;
   IsActive?: boolean;
   WindowID?: number;
   TabID?: number;
@@ -51,10 +51,20 @@ class MyTab {
     this.IsHidden = tabInfo.hidden;
     return true;
   }
+
+  public destructor = () => {
+    this.Ready2.AddWriteTask(async (): Promise<boolean> => {
+      this.SendingObject.ReadyInstances.delete(this.Ready2);
+      this.ScreenShot?.destructor();
+      return true;
+    });
+  }
+
   public constructor(myWindow: MyWindow, arg: (number | browser.tabs.Tab)) {
-    this.Ready2 = new Ready();
-    this.Ready2.AddVerifyTask(this.Verify);
     this.SendingObject = app.SendingObject;
+    this.Ready2 = new Ready(this.SendingObject);
+    this.Ready2.AddVerifyTask(this.Verify);
+    this.SendingObject.ReadyInstances.add(this.Ready2);
     this.MyWindow = myWindow;
     this.Ready2.AddWriteTask(async () => {
       let tabInfo: browser.tabs.Tab | undefined;

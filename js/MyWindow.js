@@ -171,6 +171,7 @@ class MyWindow {
                 return false;
             }
             else {
+                this.Tabs.get(tabID).destructor();
                 this.Tabs.delete(tabID);
                 this.TabsInOrder.splice(index_TabsInOrder, 1);
                 if (index_RecentTabs !== -1) {
@@ -182,13 +183,22 @@ class MyWindow {
             }
             return true;
         };
-        this.Ready2 = new Ready();
+        this.destructor = () => {
+            this.Ready2.AddWriteTask(async () => {
+                this.SendingObject.ReadyInstances.delete(this.Ready2);
+                for (const myTab of this.Tabs.values()) {
+                    myTab.destructor();
+                }
+                return true;
+            });
+        };
+        this.SendingObject = app.SendingObject;
+        this.Ready2 = new Ready(this.SendingObject);
         this.IsActive = false;
         this.RecentTabs = new Array();
         this.TabsInOrder = new Array();
         this.Tabs = new MyTabs();
-        this.Tabs2 = new MyTabs();
-        this.SendingObject = app.SendingObject;
+        this.SendingObject.ReadyInstances.add(this.Ready2);
         this.Ready2.AddVerifyTask(this.Verify2);
         this.Ready2.AddWriteTask(async () => {
             let result;
@@ -212,7 +222,6 @@ class MyWindow {
         }, "error");
         Object.defineProperties(this, {
             Ready2: { enumerable: false },
-            Tabs2: { enumerable: false },
             SendingObject: { enumerable: false }
         });
     }

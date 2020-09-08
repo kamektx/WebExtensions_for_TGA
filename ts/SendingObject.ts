@@ -1,9 +1,11 @@
 class SendingObject {
   Ready2: Ready;
+  readonly Type = "SendingObject";
   ActiveWindowID: number | undefined;
   Arrangements: Arrangements;
   Windows: MyWindows;
   UnmanagedWindows: Set<number>;
+  ReadyInstances: ReadyInstances;
   Error: SendingObjectError;
 
   public FindWindowWhichHasTheTabID = async (tabID: number): Promise<(MyWindow | undefined)> => {
@@ -85,6 +87,7 @@ class SendingObject {
         if (this.ActiveWindowID === windowID) {
           this.ActiveWindowID = undefined;
         }
+        this.Windows.get(windowID)!.destructor();
         this.Windows.delete(windowID);
       }
       return true;
@@ -120,15 +123,21 @@ class SendingObject {
       return true;
     });
   }
+
+  public ChangeOccured = async () => {
+    this.ReadyInstances.PrepareSending();
+  }
+
   public constructor() {
-    this.Ready2 = new Ready();
+    this.Ready2 = new Ready(this);
     this.Ready2.AddVerifyTask(this.Verify);
     this.ActiveWindowID = undefined;
     this.Arrangements = new Arrangements();
     this.Windows = new MyWindows();
     this.UnmanagedWindows = new Set<number>();
     this.Error = new SendingObjectError(this);
-
+    this.ReadyInstances = new ReadyInstances(this);
+    this.ReadyInstances.add(this.Ready2);
     this.Ready2.AddWriteTask(async () => {
       const windowsInfo = await browser.windows.getAll({ populate: false }).catch(() => {
         return undefined;

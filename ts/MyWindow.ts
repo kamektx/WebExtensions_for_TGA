@@ -1,5 +1,5 @@
 class MyWindow {
-  Ready2: Ready;
+  readonly Ready2: Ready;
   IsActive: boolean;
   WindowID?: number;
   ActiveTabID?: number;
@@ -7,7 +7,6 @@ class MyWindow {
   TabsInOrder: number[];
   SendingObject: SendingObject;
   Tabs: MyTabs;
-  Tabs2: MyTabs;
 
   // Verify = async (sizeCheck: boolean = false): Promise<boolean> => {
   //   if (await this.Ready === false || this.IsNotError === false) {
@@ -181,6 +180,7 @@ class MyWindow {
     if (index_TabsInOrder === -1 || this.Tabs.has(tabID) === false) {
       return false;
     } else {
+      this.Tabs.get(tabID)!.destructor();
       this.Tabs.delete(tabID);
       this.TabsInOrder.splice(index_TabsInOrder, 1);
       if (index_RecentTabs !== -1) {
@@ -192,14 +192,25 @@ class MyWindow {
     }
     return true;
   }
+
+  public destructor = () => {
+    this.Ready2.AddWriteTask(async (): Promise<boolean> => {
+      this.SendingObject.ReadyInstances.delete(this.Ready2);
+      for (const myTab of this.Tabs.values()) {
+        myTab.destructor();
+      }
+      return true;
+    });
+  }
+
   public constructor(arg: (number | browser.windows.Window)) {
-    this.Ready2 = new Ready();
+    this.SendingObject = app.SendingObject;
+    this.Ready2 = new Ready(this.SendingObject);
     this.IsActive = false;
     this.RecentTabs = new Array<number>();
     this.TabsInOrder = new Array<number>();
     this.Tabs = new MyTabs();
-    this.Tabs2 = new MyTabs();
-    this.SendingObject = app.SendingObject;
+    this.SendingObject.ReadyInstances.add(this.Ready2);
     this.Ready2.AddVerifyTask(this.Verify2);
     this.Ready2.AddWriteTask(async (): Promise<boolean> => {
       let result: boolean;
@@ -221,7 +232,6 @@ class MyWindow {
     }, "error");
     Object.defineProperties(this, {
       Ready2: { enumerable: false },
-      Tabs2: { enumerable: false },
       SendingObject: { enumerable: false }
     });
   }

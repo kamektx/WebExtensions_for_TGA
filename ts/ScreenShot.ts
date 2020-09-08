@@ -1,6 +1,6 @@
 class ScreenShot {
-  static readonly Quality = 80;
-  Ready2: Ready;
+  static readonly Quality = 30;
+  readonly Ready2: Ready;
   IsCaputured: boolean;
   ID?: string;
   Format: ("jpeg" | "png")
@@ -44,15 +44,15 @@ class ScreenShot {
         i++;
         if (i < l) {
           j = j - m + n;
-          b = ra[i] >> j;
+          b = ra[i] >>> j;
         }
       } else {
         j = j - m;
-        a >>= j;
+        a >>>= j;
       }
       const val = a + b;
       if (val < 2 ** m) {
-        str += encodingTable[a + b];
+        str += encodingTable[val];
       } else {
         throw new Error("Base32 encode error.");
       }
@@ -60,19 +60,21 @@ class ScreenShot {
     return str;
   }
 
-  Capture = async (): Promise<boolean> => {
-    await this.SetTabInformation();
-    this.IsCaputured = true;
-    this.Data = await browser.tabs.captureVisibleTab(this.MyTab.WindowID!, { format: this.Format, quality: ScreenShot.Quality }).catch(() => {
-      this.IsCaputured = false;
-      return undefined;
-    });
-    if (this.IsCaputured === true) {
-      this.CreateID();
-    }
-    this.ResetTimer();
-    this.SendJSON(); // DON'T AWAIT!!
-    return this.IsCaputured;
+  public Capture = async (): Promise<boolean> => {
+    return await this.Ready2.AddWriteTask(async () => {
+      await this.SetTabInformation();
+      this.IsCaputured = true;
+      this.Data = await browser.tabs.captureVisibleTab(this.MyTab.WindowID!, { format: this.Format, quality: ScreenShot.Quality }).catch(() => {
+        this.IsCaputured = false;
+        return undefined;
+      });
+      if (this.IsCaputured === true) {
+        this.CreateID();
+      }
+      this.ResetTimer();
+      this.SendJSON(); // DON'T AWAIT!!
+      return this.IsCaputured;
+    }, "ignore");
   }
 
   CheckTabUpdated = async (): Promise<boolean> => {
@@ -80,20 +82,18 @@ class ScreenShot {
       return this.TabURL !== this.MyTab.URL ||
         this.TabStatus !== this.MyTab.Status ||
         this.TabTitle !== this.MyTab.Title;
-    });
+    }, "ignore");
   }
 
   public Recapture = async (): Promise<boolean> => {
-    return await this.Ready2.AddWriteTask(async () => {
+    return await this.Ready2.AddReadTask(async () => {
       if (this.IsCaputured === false) {
-        const result = await this.Capture();
+        this.Capture(); // DON'T AWAIT!!
         this.IsFirstTime = true;
-        return result;
       }
       if (await this.CheckTabUpdated()) {
-        const result = await this.Capture();
+        this.Capture();
         this.IsFirstTime = true;
-        return result;
       }
       if (this.IsFirstTime) {
         this.FirstTimeMilliSeconds -= ScreenCaptureTimer.TickTime;
@@ -105,9 +105,8 @@ class ScreenShot {
       if (this.FirstTimeMilliSeconds <= 0 ||
         this.ActiveWindowMilliSeconds <= 0 ||
         this.InactiveWindowMilliSeconds <= 0) {
-        const result = await this.Capture();
+        this.Capture();
         this.IsFirstTime = false;
-        return result;
       }
       return true;
     });
@@ -132,6 +131,7 @@ class ScreenShot {
     return await this.Ready2.AddReadTask(async () => {
       if (this.IsCaputured) {
         const obj = {
+          Type: "ScreenShot",
           FileName: this.ID + "." + this.Format,
           Data: this.Data
         }
@@ -146,8 +146,15 @@ class ScreenShot {
     this.FirstTimeMilliSeconds = ScreenCaptureTimer.TimeToRecaptureFirstTime;
     this.InactiveWindowMilliSeconds = ScreenCaptureTimer.TimeToRecaptureInactiveWindow;
   }
+
+  public destructor = () => {
+    this.Ready2.AddReadTask(async () => {
+      this.SendingObject.ReadyInstances.delete(this.Ready2);
+      return true;
+    });
+  }
+
   public constructor(myTab: MyTab) {
-    this.Ready2 = new Ready();
     this.Format = "jpeg"
     this.IsFirstTime = true;
     this.IsCaputured = true;
@@ -155,9 +162,9 @@ class ScreenShot {
     this.FirstTimeMilliSeconds = 0;
     this.InactiveWindowMilliSeconds = 0;
     this.SendingObject = app.SendingObject;
+    this.Ready2 = new Ready(this.SendingObject);
+    this.SendingObject.ReadyInstances.add(this.Ready2);
     this.MyTab = myTab;
-    this.Ready2.AddWriteTask(async () => {
-      return await this.Capture();
-    }, "ignore");
+    this.Capture();
   }
 }
