@@ -5,6 +5,7 @@ class MyWindow {
   ActiveTabID?: number;
   RecentTabs: number[];
   TabsInOrder: number[];
+  LastCapturedTab?: number;
   SendingObject: SendingObject;
   Tabs: MyTabs;
 
@@ -24,6 +25,9 @@ class MyWindow {
   // }
 
   Verify2 = async (): Promise<boolean> => {
+    if (this.LastCapturedTab !== undefined && this.Tabs.has(this.LastCapturedTab!) === false) {
+      this.LastCapturedTab = undefined;
+    }
     if (this.Ready2.IsError) {
       this.SendingObject.Error.ThrowError("MyWindow : WindowID = " + this.WindowID);
       return false;
@@ -141,6 +145,15 @@ class MyWindow {
     });
   }
 
+  public UpdateTabFavicon = async (tabID: number, faviconData: string): Promise<boolean> => {
+    return await this.Ready2.AddReadTask(async (): Promise<boolean> => {
+      if (this.Tabs.has(tabID) === false) {
+        return false;
+      } else {
+        return await this.Tabs.get(tabID)!.SetFavicon(faviconData);
+      }
+    });
+  }
 
   SetWindowInfo = async (windowInfo: browser.windows.Window): Promise<boolean> => {
     if (windowInfo.type !== "normal") {
@@ -194,7 +207,7 @@ class MyWindow {
   }
 
   public destructor = () => {
-    this.Ready2.AddWriteTask(async (): Promise<boolean> => {
+    this.Ready2.AddReadTask(async (): Promise<boolean> => {
       this.SendingObject.ReadyInstances.delete(this.Ready2);
       for (const myTab of this.Tabs.values()) {
         myTab.destructor();

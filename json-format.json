@@ -15,7 +15,7 @@
         {
           "Size": "small",
           "Type": "TabsInOrder",
-          "MaxColumns": 0
+          "MaxColumns": -1
         }
       ]
     },

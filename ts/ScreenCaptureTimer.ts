@@ -1,7 +1,7 @@
 class ScreenCaptureTimer {
-  static readonly TickTime = 3 * 1000;
-  static readonly TimeToRecaptureActiveWindow = 60 * 1000;
-  static readonly TimeToRecaptureFirstTime = 5 * 1000;
+  static readonly TickTime = 1 * 1000;
+  static readonly TimeToRecaptureActiveWindow = 30 * 1000;
+  static readonly TimeToRecaptureFirstTime = 4 * 1000;
   static readonly TimeToRecaptureInactiveWindow = 15 * 60 * 1000;
   IsTimerRunning: boolean;
 

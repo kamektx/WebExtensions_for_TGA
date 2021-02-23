@@ -1,6 +1,6 @@
 class MyTab {
   readonly Ready2: Ready;
-  IsActive?: boolean;
+  IsActive: boolean;
   WindowID?: number;
   TabID?: number;
   Status?: string;
@@ -8,6 +8,7 @@ class MyTab {
   ScreenShot?: ScreenShot;
   Title?: string;
   URL?: string;
+  Favicon?: Favicon;
   IsHidden?: boolean;
   IsPinned?: boolean;
   SendingObject: SendingObject;
@@ -33,7 +34,11 @@ class MyTab {
       const tabInfo = await this.Query();
       let result: boolean;
       if (tabInfo !== undefined) {
-        return this.SetTabInfo(tabInfo);
+        this.SetTabInfo(tabInfo);
+        if (tabInfo.favIconUrl === undefined) {
+          this.Favicon = undefined;
+        }
+        return true;
       } else {
         return false;
       }
@@ -52,8 +57,19 @@ class MyTab {
     return true;
   }
 
+  public SetFavicon = async (faviconData?: string): Promise<boolean> => {
+    return await this.Ready2.AddWriteTask(async (): Promise<boolean> => {
+      if (faviconData !== undefined && faviconData.startsWith("data:")) {
+        this.Favicon = new Favicon(faviconData);
+      } else {
+        this.Favicon = undefined;
+      }
+      return true;
+    });
+  }
+
   public destructor = () => {
-    this.Ready2.AddWriteTask(async (): Promise<boolean> => {
+    this.Ready2.AddReadTask(async (): Promise<boolean> => {
       this.SendingObject.ReadyInstances.delete(this.Ready2);
       this.ScreenShot?.destructor();
       return true;
@@ -66,6 +82,7 @@ class MyTab {
     this.Ready2.AddVerifyTask(this.Verify);
     this.SendingObject.ReadyInstances.add(this.Ready2);
     this.MyWindow = myWindow;
+    this.IsActive = false;
     this.Ready2.AddWriteTask(async () => {
       let tabInfo: browser.tabs.Tab | undefined;
       if (typeof arg === "number") {
@@ -75,7 +92,9 @@ class MyTab {
         tabInfo = arg;
       }
       if (tabInfo !== undefined) {
-        return this.SetTabInfo(tabInfo)
+        this.SetTabInfo(tabInfo);
+        this.SetFavicon(tabInfo.favIconUrl);
+        return true;
       } else {
         return false;
       }

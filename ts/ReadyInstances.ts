@@ -1,6 +1,6 @@
 class ReadyInstances extends Set<Ready> {
-  static readonly TickTime = 100;
-  static readonly TimeToWait = 400;
+  static readonly TickTime = 40;
+  static readonly TimeToWait = 160;
   SendingObject: SendingObject;
   TimerMilliSeconds: number;
   IsTimerRunning: boolean;
@@ -28,8 +28,9 @@ class ReadyInstances extends Set<Ready> {
       if (this.SendingObject !== app.SendingObject) {
         resolve(false);
       }
-      app.Port.postMessage(this.SendingObject);
-      resolve(false);
+      app.Messaging.PostMessage(this.SendingObject);
+
+      resolve(true);
     });
     const result = await promise;
     console.log("Sent SendingObject.", result);

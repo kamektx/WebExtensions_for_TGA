@@ -135,7 +135,9 @@ class ScreenShot {
           FileName: this.ID + "." + this.Format,
           Data: this.Data
         }
-        app.Port.postMessage(obj);
+        app.Messaging.PostMessage(obj);
+        this.MyTab.MyWindow.LastCapturedTab = this.MyTab.TabID;
+        console.log("Sent ScreenShot");
       }
       return true;
     });

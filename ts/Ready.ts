@@ -27,7 +27,7 @@ class Ready {
         await this._Tasks.get(i);
       }
       for (const fn of this._VerifyTasks) {
-        this.IsNotError = this.IsNotError && await fn();
+        this.IsNotError = await fn() && this.IsNotError;
       }
       this._DoneTaskIndex = myTaskIndex;
       if (myTaskIndex > Ready.MaxTasks) {

@@ -12,7 +12,7 @@ if (isEventActive) {
     app.SendingObject.RemoveWindow(windowID);
   });
   browser.windows.onFocusChanged.addListener(async (windowID: number) => {
-    console.log("windows.onFocusChanged");
+    console.log("windows.onFocusChanged : WindowID " + windowID);
     app.SendingObject.FocusChanged(windowID);
   });
 
@@ -124,14 +124,19 @@ if (isEventActive) {
           break;
       }
     }
+    if (changeInfo.favIconUrl !== undefined) {
+      console.log("tabs.onUpdated (Favicon)");
+      switch (await app.SendingObject.HasWindowID(tabInfo.windowId!)) {
+        case "false":
+          app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onUpdated");
+          return;
+        case "managed":
+          app.SendingObject.Windows.get(tabInfo.windowId)!.UpdateTabFavicon(tabID, changeInfo.favIconUrl);
+          break;
+      }
+    }
   });
 }
-
-
-
-app.Port.onMessage.addListener((response) => {
-  console.log("Received: " + response);
-});
 
 browser.browserAction.onClicked.addListener(async () => {
   // console.log("Sending: ping");

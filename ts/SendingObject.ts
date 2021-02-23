@@ -18,7 +18,7 @@ class SendingObject {
             return myWindow;
           }
         } else {
-          this.Ready2.AddWriteTask(async () => false);
+          this.Ready2.AddWriteTask(async () => false); //ForErrorNotification
           return undefined;
         }
       }
@@ -106,19 +106,15 @@ class SendingObject {
           return false;
         }
       }
-      if (windowID === -1 || this.UnmanagedWindows.has(windowID)) {
-        this.ActiveWindowID = undefined;
+      if (this.Windows.has(windowID)) {
+        const myWindow = this.Windows.get(windowID)!;
+        myWindow.Ready2.AddWriteTask(async () => {
+          myWindow.IsActive = true;
+          return true;
+        });
+        this.ActiveWindowID = windowID;
       } else {
-        if (this.Windows.has(windowID)) {
-          const myWindow = this.Windows.get(windowID)!;
-          myWindow.Ready2.AddWriteTask(async () => {
-            myWindow.IsActive = true;
-            return true;
-          });
-          this.ActiveWindowID = windowID;
-        } else {
-          return false;
-        }
+        this.ActiveWindowID = undefined;
       }
       return true;
     });

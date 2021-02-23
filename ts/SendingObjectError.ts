@@ -1,14 +1,14 @@
 class SendingObjectError {
-  static readonly WaitForErrorHandle = 200;
-  static readonly TimerTickTime = 30;
+  static readonly TimeToHandleError = 200;
+  static readonly TickTime = 30;
   SendingObject: SendingObject;
   IsError: boolean;
   TimerMilliSeconds: number;
 
   Timer = async (): Promise<boolean> => {
     while (this.TimerMilliSeconds > 0) {
-      await Thread.Delay(SendingObjectError.TimerTickTime);
-      this.TimerMilliSeconds -= SendingObjectError.TimerTickTime;
+      await Thread.Delay(SendingObjectError.TickTime);
+      this.TimerMilliSeconds -= SendingObjectError.TickTime;
       if (!this.IsError || app.SendingObject !== this.SendingObject) {
         return false;
       }
@@ -21,13 +21,13 @@ class SendingObjectError {
   }
   ThrowError(errString: string) {
     app.ErrorLog.push(errString + " : " + new Date().toTimeString());
-    console.log(errString + " : " + new Date().toTimeString());
+    console.log(errString);
     if (this.IsError) {
-      this.TimerMilliSeconds = SendingObjectError.WaitForErrorHandle;
+      this.TimerMilliSeconds = SendingObjectError.TimeToHandleError;
       return;
     } else {
       this.IsError = true;
-      this.TimerMilliSeconds = SendingObjectError.WaitForErrorHandle;
+      this.TimerMilliSeconds = SendingObjectError.TimeToHandleError;
       this.Timer();
     }
   }

@@ -1,0 +1,17 @@
+{
+  "name": "webextensions_for_tga",
+  "version": "0.1.0",
+  "description": "Webextension for Touchpad Gestures Advanced.",
+  "main": "background.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kamektx",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chrome": "0.0.133",
+    "@types/firefox-webext-browser": "^82.0.0",
+    "typescript": "^4.1.5",
+    "web-ext": "^5.5.0"
+  }
+}
