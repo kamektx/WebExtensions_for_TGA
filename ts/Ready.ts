@@ -146,7 +146,7 @@ class Ready {
       for (let i = this._DoneTaskIndex + 1; i <= lastWriteTaskIndex; i++) {
         await this._Tasks.get(i);
         if (this.IsError && ifAlreadyError === "quit") {
-          resolve(undefined);
+          resolve(undefined as any);
         }
       }
       const result = await fn();

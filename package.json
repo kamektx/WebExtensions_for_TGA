@@ -9,7 +9,7 @@
   "author": "kamektx",
   "license": "ISC",
   "devDependencies": {
-    "@types/chrome": "0.0.133",
+    "@types/chrome": "~0.0.133",
     "@types/firefox-webext-browser": "^82.0.0",
     "typescript": "^4.1.5",
     "web-ext": "^5.5.0"
