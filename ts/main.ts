@@ -18,13 +18,20 @@ if (isEventActive) {
 
   browser.tabs.onActivated.addListener(async (activeInfo) => {
     console.log("tabs.onActivated");
-    switch (await app.SendingObject.HasWindowID(activeInfo.windowId)) {
-      case "false":
-        app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + activeInfo.windowId + ". : tabs.onActivated");
-        return;
-      case "managed":
-        app.SendingObject.Windows.get(activeInfo.windowId)?.ActiveTabChanged(activeInfo.tabId);
-        break;
+    for (let i = 2; i > 0; i--) {
+      switch (await app.SendingObject.HasWindowID(activeInfo.windowId)) {
+        case "false":
+          if (i > 1) {
+            await Thread.Delay(10);
+            break;
+          }
+          app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + activeInfo.windowId + ". : tabs.onActivated");
+          return;
+        case "managed":
+          app.SendingObject.Windows.get(activeInfo.windowId)?.ActiveTabChanged(activeInfo.tabId);
+          i = 0;
+          break;
+      }
     }
   });
   browser.tabs.onAttached.addListener(async (tabID, attachInfo) => {
@@ -53,13 +60,20 @@ if (isEventActive) {
     if (tabInfo.windowId === undefined) {
       throw new Error("Couldn't get the windowID");
     }
-    switch (await app.SendingObject.HasWindowID(tabInfo.windowId!)) {
-      case "false":
-        app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onCreated");
-        return;
-      case "managed":
-        app.SendingObject.Windows.get(tabInfo.windowId)?.CreateTab(tabInfo);
-        break;
+    for (let i = 2; i > 0; i--) {
+      switch (await app.SendingObject.HasWindowID(tabInfo.windowId!)) {
+        case "false":
+          if (i > 1) {
+            await Thread.Delay(10);
+            break;
+          }
+          app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the WindowID " + tabInfo.windowId + ". : tabs.onCreated");
+          return;
+        case "managed":
+          app.SendingObject.Windows.get(tabInfo.windowId)?.CreateTab(tabInfo);
+          i = 0;
+          break;
+      }
     }
   });
   browser.tabs.onMoved.addListener(async (tabID, moveInfo) => {
@@ -138,10 +152,13 @@ if (isEventActive) {
   });
 }
 
+browser.browserAction.setTitle({
+  title: "Press to Reset"
+});
+
 browser.browserAction.onClicked.addListener(async () => {
-  // console.log("Sending: ping");
-  // app.Port.postMessage("ping" as any);
-  console.log(app.SendingObject);
-  console.log(JSON.stringify(app.SendingObject));
+  app.Messaging.Disconnect();
+  app.Messaging = new Messaging();
+  app.SendingObject.Error.ThrowError("ResetButton was pressed.");
 });
 

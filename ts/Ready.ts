@@ -44,7 +44,7 @@ class Ready {
     }));
   }
 
-  AddWriteTask = async (fn: () => Promise<boolean>, ifReturnFalse: ("error" | "ignore") = "error", ifAlreadyError: ("quit" | "force") = "quit"): Promise<boolean> => {
+  AddWriteTask = async (fn: () => Promise<boolean>, ifReturnFalse: ("error" | "ignore" | "retry") = "error", ifAlreadyError: ("quit" | "force") = "quit"): Promise<boolean> => {
     if (this.IsError && ifAlreadyError === "quit") {
       return false;
     }

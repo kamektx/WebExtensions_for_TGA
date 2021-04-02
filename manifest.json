@@ -1,10 +1,10 @@
 {
-  "description": "Native messaging example add-on",
+  "description": "WebExtension for TouchpadGesture Advanced",
   "manifest_version": 2,
-  "name": "Native messaging example",
+  "name": "WebExtension for TouchpadGesture Advanced",
   "version": "1.0",
   "icons": {
-    "48": "icons/message.svg"
+    "48": "icons/TGA_icon_48.png"
   },
   "browser_specific_settings": {
     "gecko": {
@@ -16,7 +16,7 @@
     "page": "background.html"
   },
   "browser_action": {
-    "default_icon": "icons/message.svg"
+    "default_icon": "icons/TGA_icon_48.png"
   },
   "permissions": [
     "nativeMessaging",

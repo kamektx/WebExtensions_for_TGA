@@ -1,16 +1,47 @@
 interface MessageResponse {
-  ReceivedIndex: number
+  Command: ("ChangeTab" | "Received"),
+  WindowID?: number,
+  TabID?: number,
+  PageID?: number,
+  ReceivedIndex?: number
 }
 
 class Messaging {
   private Port: browser.runtime.Port;
-  static readonly MaxTasks = 1000;
+  static readonly MaxTasks = 300;
   private _Tasks: Map<number, object>;
   private _TaskIndex: number;
-  private ReceivedIndex: number;
+  private PostingIndex: number = 0;
+  private ReceivedIndex: number = 0;
+  private TickTime: number = 100;
+  private TimeToReconnect: number = 4000;
+  private TimerMilliSeconds: number = this.TimeToReconnect;
+  private IsTimerRunning: boolean = false;
 
   private ExecutePostMessage(obj: object, index: number) {
+    console.log(`Posted a Message. Index: ${index}`);
+    this.PostingIndex = index;
     this.Port.postMessage({ SendingIndex: index, Content: obj });
+    this.TimerMilliSeconds = this.TimeToReconnect;
+    if (!this.IsTimerRunning) {
+      this.IsTimerRunning = true;
+      this.VerifyReceivedTimer();
+    }
+  }
+
+  private VerifyReceivedTimer = async (): Promise<boolean> => {
+    while (this.TimerMilliSeconds > 0) {
+      await Thread.Delay(this.TickTime);
+      this.TimerMilliSeconds -= SendingObjectError.TickTime;
+    }
+    this.IsTimerRunning = false;
+    if (this.PostingIndex == this.ReceivedIndex) return true;
+
+    this.Disconnect();
+    this.Reconnect();
+    this.ReceivedIndex == this.PostingIndex;
+    this.HandleNextTask();
+    return false;
   }
 
   PostMessage = (obj: object): void => {
@@ -24,20 +55,85 @@ class Messaging {
     }
   }
 
+  Received = (response: MessageResponse): void => {
+    const receivedIndex = response.ReceivedIndex!;
+    console.log("ReceivedIndex: " + receivedIndex);
+    this.ReceivedIndex = receivedIndex;
+    this.HandleNextTask();
+  }
+
+  HandleNextTask = (): void => {
+    if (this._Tasks.has(this.ReceivedIndex + 1)) {
+      this.ExecutePostMessage(this._Tasks.get(this.ReceivedIndex + 1)!, this.ReceivedIndex + 1);
+    }
+    if (this.ReceivedIndex > Messaging.MaxTasks) {
+      this._Tasks.delete(this.ReceivedIndex - Messaging.MaxTasks);
+    }
+  }
+
+  ChangeTab = (response: MessageResponse): void => {
+    const TabID = response.TabID!;
+    const WindowID = response.WindowID!;
+    if (app.SendingObject.ActiveWindowID != WindowID) {
+      browser.windows.update(
+        WindowID,              // integer
+        {
+          focused: true
+        }           // object
+      )
+    }
+    browser.tabs.update(
+      TabID,
+      {
+        active: true
+      }
+    )
+  }
+
+  Disconnect = (): void => {
+    this._Tasks.clear();
+    this.Port.disconnect();
+  }
+
+  Reconnect = (): void => {
+    this.Port = browser.runtime.connectNative("TGA_NativeMessaging_Cliant");
+    this.Port.onMessage.addListener((response) => {
+      console.log("Message Received.");
+      const responseCasted = response as MessageResponse;
+      const command = responseCasted.Command;
+      switch (command) {
+        case "Received":
+          this.Received(responseCasted);
+          break;
+        case "ChangeTab":
+          console.log(responseCasted);
+          this.ChangeTab(responseCasted);
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
   constructor() {
-    this.ReceivedIndex = 0;
     this._Tasks = new Map();
     this._TaskIndex = 0;
     this.Port = browser.runtime.connectNative("TGA_NativeMessaging_Cliant");
     this.Port.onMessage.addListener((response) => {
+      console.log("Message Received.");
       const responseCasted = response as MessageResponse;
-      const receivedIndex = responseCasted.ReceivedIndex;
-      this.ReceivedIndex = receivedIndex;
-      if (this._Tasks.has(receivedIndex + 1)) {
-        this.ExecutePostMessage(this._Tasks.get(receivedIndex + 1)!, receivedIndex + 1);
-        this._Tasks.delete(receivedIndex + 1);
+      const command = responseCasted.Command;
+      switch (command) {
+        case "Received":
+          this.Received(responseCasted);
+          break;
+        case "ChangeTab":
+          console.log(responseCasted);
+          this.ChangeTab(responseCasted);
+          break;
+        default:
+          break;
       }
-      console.log("ReceivedIndex: " + receivedIndex);
     });
   }
 }
