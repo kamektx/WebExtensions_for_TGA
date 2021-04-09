@@ -181,8 +181,8 @@ class MyWindow {
   }
   InsertTabInfo = (tabInfo: browser.tabs.Tab) => {
     if (tabInfo.id !== undefined) {
-      this.Tabs.set(tabInfo.id, new MyTab(this, tabInfo));
-      if (this.TabsInOrder[tabInfo.index] !== tabInfo.id) {
+      if (!this.Tabs.has(tabInfo.id)) {
+        this.Tabs.set(tabInfo.id, new MyTab(this, tabInfo));
         this.TabsInOrder.splice(tabInfo.index, 0, tabInfo.id);
       }
     } else {

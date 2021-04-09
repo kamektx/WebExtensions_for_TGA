@@ -47,7 +47,7 @@ class Arrangements {
   constructor() {
     this.HandleDirection = new HandleDirection();
     this.AddDirection(new Arrangement(new StartPosition(0, 1)), "Down");
-    this.Down!.Column.push(new ColumnSetting("RecentTabs", 2, "big"));
+    this.Down!.Column.push(new ColumnSetting("RecentTabs", 3, "big"));
     this.Down!.Column.push(new ColumnSetting("TabsInOrder", -1, "small"));
   }
   AddDirection(arrangement: Arrangement, direction: Direction, overWrite = false): boolean {

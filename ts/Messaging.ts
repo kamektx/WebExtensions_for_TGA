@@ -36,7 +36,7 @@ class Messaging {
     }
     this.IsTimerRunning = false;
     if (this.PostingIndex == this.ReceivedIndex) return true;
-
+    console.log(" VerifyReceivedTimer is over. Trying Reconnect...")
     this.Disconnect();
     this.Reconnect();
     this.ReceivedIndex == this.PostingIndex;
@@ -91,7 +91,6 @@ class Messaging {
   }
 
   Disconnect = (): void => {
-    this._Tasks.clear();
     this.Port.disconnect();
   }
 
