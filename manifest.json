@@ -2,14 +2,14 @@
   "description": "WebExtension for TouchpadGesture Advanced",
   "manifest_version": 2,
   "name": "WebExtension for TouchpadGesture Advanced",
-  "version": "1.0",
+  "version": "0.1.0",
   "icons": {
     "48": "icons/TGA_icon_48.png"
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "ping_pong@example.org",
-      "strict_min_version": "50.0"
+      "id": "we_f_tga@techchair.net",
+      "strict_min_version": "60.0"
     }
   },
   "background": {
