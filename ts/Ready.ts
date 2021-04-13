@@ -8,6 +8,7 @@ class Ready {
   private _LastWriteTaskIndex: number;
   private _WriteAccess: boolean;
   private _IsNotyfyChange: boolean;
+  private _MyObject: any;
   IsNotError: boolean;
   SendingObject: SendingObject;
 
@@ -175,9 +176,10 @@ class Ready {
     return true;
   }
 
-  constructor(sendingObject: SendingObject, isNotifyChange: boolean = true) {
+  constructor(sendingObject: SendingObject, readyObject: any, isNotifyChange: boolean = true) {
     this.IsNotError = true;
     this._IsReady = true;
+    this._MyObject = readyObject;
     this._Tasks = new Map();
     this._LastWriteTaskIndex = 0;
     this._VerifyTasks = new Array();

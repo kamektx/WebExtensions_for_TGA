@@ -78,7 +78,7 @@ class MyTab {
 
   public constructor(myWindow: MyWindow, arg: (number | browser.tabs.Tab)) {
     this.SendingObject = app.SendingObject;
-    this.Ready2 = new Ready(this.SendingObject);
+    this.Ready2 = new Ready(this.SendingObject, this);
     this.Ready2.AddVerifyTask(this.Verify);
     this.SendingObject.ReadyInstances.add(this.Ready2);
     this.MyWindow = myWindow;

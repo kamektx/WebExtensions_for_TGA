@@ -125,7 +125,7 @@ class SendingObject {
   }
 
   public constructor() {
-    this.Ready2 = new Ready(this);
+    this.Ready2 = new Ready(this, this);
     this.Ready2.AddVerifyTask(this.Verify);
     this.ActiveWindowID = undefined;
     this.Arrangements = new Arrangements();

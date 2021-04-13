@@ -220,7 +220,7 @@ class MyWindow {
 
   public constructor(arg: (number | browser.windows.Window)) {
     this.SendingObject = app.SendingObject;
-    this.Ready2 = new Ready(this.SendingObject);
+    this.Ready2 = new Ready(this.SendingObject, this);
     this.IsActive = false;
     this.RecentTabs = new Array<number>();
     this.TabsInOrder = new Array<number>();

@@ -164,7 +164,7 @@ class ScreenShot {
     this.FirstTimeMilliSeconds = 0;
     this.InactiveWindowMilliSeconds = 0;
     this.SendingObject = app.SendingObject;
-    this.Ready2 = new Ready(this.SendingObject);
+    this.Ready2 = new Ready(this.SendingObject, this);
     this.SendingObject.ReadyInstances.add(this.Ready2);
     this.MyTab = myTab;
     this.Capture();
