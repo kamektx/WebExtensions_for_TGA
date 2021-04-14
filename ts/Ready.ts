@@ -1,5 +1,5 @@
 class Ready {
-  static readonly MaxTasks = 1000;
+  static readonly MaxTasks = 500;
   private _IsReady: boolean;
   private _Tasks: Map<number, Promise<any>>;
   private _VerifyTasks: Array<() => Promise<boolean>>;
@@ -112,9 +112,9 @@ class Ready {
       for (let i = this._DoneTaskIndex + 1; i < myTaskIndex - 1; i++) {
         await this._Tasks.get(i);
       }
-      this._DoneTaskIndex = myTaskIndex;
-      if (myTaskIndex > Ready.MaxTasks) {
-        this._Tasks.delete(myTaskIndex - Ready.MaxTasks);
+      this._DoneTaskIndex = myTaskIndex - 1;
+      if (myTaskIndex - 1 > Ready.MaxTasks) {
+        this._Tasks.delete(myTaskIndex - 1 - Ready.MaxTasks);
       }
       resolve(this.IsNotError);
     }));

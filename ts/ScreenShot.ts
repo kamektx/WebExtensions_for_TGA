@@ -90,10 +90,12 @@ class ScreenShot {
       if (this.IsCaputured === false) {
         this.Capture(); // DON'T AWAIT!!
         this.IsFirstTime = true;
+        return true;
       }
       if (await this.CheckTabUpdated()) {
         this.Capture();
         this.IsFirstTime = true;
+        return true;
       }
       if (this.IsFirstTime) {
         this.FirstTimeMilliSeconds -= ScreenCaptureTimer.TickTime;
@@ -107,6 +109,7 @@ class ScreenShot {
         this.InactiveWindowMilliSeconds <= 0) {
         this.Capture();
         this.IsFirstTime = false;
+        return true;
       }
       return true;
     });

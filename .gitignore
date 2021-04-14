@@ -3,6 +3,7 @@
 # Edit at https://www.gitignore.io/?templates=node
 
 js/*
+web-ext-artifacts/
 
 ### Node ###
 # Logs
