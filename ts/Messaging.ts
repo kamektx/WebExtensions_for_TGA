@@ -7,7 +7,7 @@ interface MessageResponse {
 }
 
 class Messaging {
-  private Port: browser.runtime.Port;
+  private Port!: browser.runtime.Port;
   static readonly MaxTasks = 300;
   private _Tasks: Map<number, object>;
   private _TaskIndex: number;
@@ -17,6 +17,7 @@ class Messaging {
   private TimeToReconnect: number = 4000;
   private TimerMilliSeconds: number = this.TimeToReconnect;
   private IsTimerRunning: boolean = false;
+  private Disposed: boolean = false;
 
   private ExecutePostMessage(obj: object, index: number) {
     console.log(`Posted a Message. Index: ${index}`);
@@ -36,10 +37,11 @@ class Messaging {
     }
     this.IsTimerRunning = false;
     if (this.PostingIndex == this.ReceivedIndex) return true;
+    if (this.Disposed) return false;
     console.log(" VerifyReceivedTimer is over. Trying Reconnect...")
     this.Disconnect();
     this.Reconnect();
-    this.ReceivedIndex == this.PostingIndex;
+    this.ReceivedIndex = this.PostingIndex;
     this.HandleNextTask();
     return false;
   }
@@ -63,6 +65,7 @@ class Messaging {
   }
 
   HandleNextTask = (): void => {
+    if (this.Disposed) return;
     if (this._Tasks.has(this.ReceivedIndex + 1)) {
       this.ExecutePostMessage(this._Tasks.get(this.ReceivedIndex + 1)!, this.ReceivedIndex + 1);
     }
@@ -90,7 +93,11 @@ class Messaging {
     )
   }
 
-  Disconnect = (): void => {
+  Dispose = (): void => {
+    this.Disposed = true;
+    this.Disconnect();
+  }
+  private Disconnect = (): void => {
     this.Port.disconnect();
   }
 
@@ -117,22 +124,6 @@ class Messaging {
   constructor() {
     this._Tasks = new Map();
     this._TaskIndex = 0;
-    this.Port = browser.runtime.connectNative("TGA_NativeMessaging_Cliant");
-    this.Port.onMessage.addListener((response) => {
-      console.log("Message Received.");
-      const responseCasted = response as MessageResponse;
-      const command = responseCasted.Command;
-      switch (command) {
-        case "Received":
-          this.Received(responseCasted);
-          break;
-        case "ChangeTab":
-          console.log(responseCasted);
-          this.ChangeTab(responseCasted);
-          break;
-        default:
-          break;
-      }
-    });
+    this.Reconnect();
   }
 }

@@ -157,7 +157,7 @@ browser.browserAction.setTitle({
 });
 
 browser.browserAction.onClicked.addListener(async () => {
-  app.Messaging.Disconnect();
+  app.Messaging.Dispose();
   app.Messaging = new Messaging();
   app.SendingObject.Error.ThrowError("ResetButton was pressed.");
 });
