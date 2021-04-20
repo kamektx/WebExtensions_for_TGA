@@ -2,6 +2,7 @@ class ScreenShot {
   static readonly Quality = 30;
   readonly Ready2: Ready;
   IsCaputured: boolean;
+  CannotCapture: boolean;
   ID?: string;
   Format: ("jpeg" | "png")
   Data?: string;
@@ -64,11 +65,15 @@ class ScreenShot {
     return await this.Ready2.AddWriteTask(async () => {
       await this.SetTabInformation();
       this.IsCaputured = true;
-      this.Data = await browser.tabs.captureVisibleTab(this.MyTab.WindowID!, { format: this.Format, quality: ScreenShot.Quality }).catch(() => {
+      this.CannotCapture = false;
+      this.Data = await browser.tabs.captureVisibleTab(this.MyTab.WindowID!, { format: this.Format, quality: ScreenShot.Quality }).catch((err) => {
         this.IsCaputured = false;
+        if ((err?.message as string) === "The \'activeTab\' permission is not in effect because this extension has not been in invoked.") {
+          this.CannotCapture = true;
+        }
         return undefined;
       });
-      if (this.IsCaputured === true) {
+      if (this.IsCaputured || (this.CannotCapture && this.IsFirstTime)) {
         this.CreateID();
       }
       this.ResetTimer();
@@ -87,14 +92,14 @@ class ScreenShot {
 
   public Recapture = async (): Promise<boolean> => {
     return await this.Ready2.AddReadTask(async () => {
-      if (this.IsCaputured === false) {
-        this.Capture(); // DON'T AWAIT!!
+      if (await this.CheckTabUpdated()) {
         this.IsFirstTime = true;
+        this.Capture();
         return true;
       }
-      if (await this.CheckTabUpdated()) {
-        this.Capture();
+      if (!this.IsCaputured && !this.CannotCapture) {
         this.IsFirstTime = true;
+        this.Capture(); // DON'T AWAIT!!
         return true;
       }
       if (this.IsFirstTime) {
@@ -107,8 +112,8 @@ class ScreenShot {
       if (this.FirstTimeMilliSeconds <= 0 ||
         this.ActiveWindowMilliSeconds <= 0 ||
         this.InactiveWindowMilliSeconds <= 0) {
-        this.Capture();
         this.IsFirstTime = false;
+        this.Capture();
         return true;
       }
       return true;
@@ -141,6 +146,14 @@ class ScreenShot {
         app.Messaging.PostMessage(obj);
         this.MyTab.MyWindow.LastCapturedTab = this.MyTab.TabID;
         console.log("Sent ScreenShot");
+      } else if (this.CannotCapture) {
+        const obj = {
+          Type: "CannotCaptureScreenShot",
+          FileName: this.ID + "." + this.Format,
+          Title: this.TabTitle
+        }
+        app.Messaging.PostMessage(obj);
+        console.log("Sent CannotCaptureScreenShot");
       }
       return true;
     });
@@ -170,6 +183,7 @@ class ScreenShot {
     this.Ready2 = new Ready(this.SendingObject, this);
     this.SendingObject.ReadyInstances.add(this.Ready2);
     this.MyTab = myTab;
+    this.CannotCapture = false;
     this.Capture();
   }
 }

@@ -1,6 +1,8 @@
 class Favicon {
   ID?: string;
   Data?: string;
+  Url?: string;
+  IsFaviconUrl: boolean;
 
   CreateID() {
     const randomArray = new Uint32Array(4);
@@ -47,23 +49,39 @@ class Favicon {
   }
 
   SendJSON = (): boolean => {
-    const obj = {
-      Type: "Favicon",
-      Name: this.ID,
-      Data: this.Data
+    if (this.IsFaviconUrl) {
+      const obj = {
+        Type: "FaviconUrl",
+        Name: this.ID,
+        Url: this.Url
+      }
+      app.Messaging.PostMessage(obj);
+      console.log("Sent FaviconUrl", this.Url);
+      return true;
+    } else {
+      const obj = {
+        Type: "Favicon",
+        Name: this.ID,
+        Data: this.Data
+      }
+      app.Messaging.PostMessage(obj);
+      console.log("Sent Favicon");
+      return true;
     }
-    app.Messaging.PostMessage(obj);
-    console.log("Sent Favicon");
-    return true;
   }
 
   public toJSON() {
     return this.ID;
   }
 
-  constructor(faviconData: string) {
+  constructor(faviconData: string, isFaviconUrl: boolean = false) {
     this.CreateID();
-    this.Data = faviconData;
+    this.IsFaviconUrl = isFaviconUrl;
+    if (this.IsFaviconUrl) {
+      this.Url = faviconData;
+    } else {
+      this.Data = faviconData;
+    }
     this.SendJSON();
   }
 }

@@ -83,14 +83,14 @@ class Messaging {
         {
           focused: true
         }           // object
-      )
+      ).catch();
     }
     browser.tabs.update(
       TabID,
       {
         active: true
       }
-    )
+    ).catch();
   }
 
   Dispose = (): void => {
@@ -102,7 +102,7 @@ class Messaging {
   }
 
   Reconnect = (): void => {
-    this.Port = browser.runtime.connectNative("TGA_NativeMessaging_Cliant");
+    this.Port = browser.runtime.connectNative("tga_nativemessaging_cliant");
     this.Port.onMessage.addListener((response) => {
       console.log("Message Received.");
       const responseCasted = response as MessageResponse;

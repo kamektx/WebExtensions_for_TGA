@@ -61,6 +61,8 @@ class MyTab {
     return await this.Ready2.AddWriteTask(async (): Promise<boolean> => {
       if (faviconData != undefined && faviconData.startsWith("data:")) {
         this.Favicon = new Favicon(faviconData);
+      } else if (faviconData != undefined && faviconData.startsWith("http")) {
+        this.Favicon = new Favicon(faviconData, true);
       } else {
         this.Favicon = undefined;
       }

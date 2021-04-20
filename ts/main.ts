@@ -13,7 +13,23 @@ if (isEventActive) {
   });
   browser.windows.onFocusChanged.addListener(async (windowID: number) => {
     console.log("windows.onFocusChanged : WindowID " + windowID);
-    app.SendingObject.FocusChanged(windowID);
+    switch (app.ChromiumOrGecko) {
+      case "Gecko":
+        app.SendingObject.FocusChanged(windowID);
+        break;
+      case "Chromium":
+        const windowInfo = await browser.windows.getLastFocused({
+          populate: false,
+          windowTypes: ["normal"]
+        })
+        if (windowInfo.focused && windowInfo.id !== undefined) {
+          app.SendingObject.FocusChanged(windowInfo.id);
+        } else {
+          app.SendingObject.FocusChanged(-1);
+        }
+        break;
+    }
+
   });
 
   browser.tabs.onActivated.addListener(async (activeInfo) => {

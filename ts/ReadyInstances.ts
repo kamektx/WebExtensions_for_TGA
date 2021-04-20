@@ -23,13 +23,16 @@ class ReadyInstances extends Set<Ready> {
     let promise = new Promise<boolean>(async resolve => {
       for (const ready of this) {
         const isNotError = await ready.WaitForThisReadyAndWaitForSendingJSON();
-        if (isNotError === false) resolve(false);
+        if (isNotError === false) {
+          resolve(false);
+          return;
+        }
       }
       if (this.SendingObject !== app.SendingObject) {
         resolve(false);
+        return;
       }
       app.Messaging.PostMessage(this.SendingObject);
-
       resolve(true);
     });
     const result = await promise;
