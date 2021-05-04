@@ -22,7 +22,7 @@ class MyTab {
     return true;
   }
 
-  Query = async (): Promise<browser.tabs.Tab | undefined> => {
+  GetTabInfo = async (): Promise<browser.tabs.Tab | undefined> => {
     const tabInfo = await browser.tabs.get(this.TabID!).catch(() => {
       return undefined;
     });
@@ -31,11 +31,10 @@ class MyTab {
 
   public Update = async (): Promise<boolean> => {
     return this.Ready2.AddWriteTask(async (): Promise<boolean> => {
-      const tabInfo = await this.Query();
-      let result: boolean;
+      const tabInfo = await this.GetTabInfo();
       if (tabInfo !== undefined) {
         this.SetTabInfo(tabInfo);
-        if (tabInfo.favIconUrl === undefined) {
+        if (tabInfo.favIconUrl === undefined || tabInfo.favIconUrl === "") {
           this.Favicon = undefined;
         }
         return true;
@@ -89,7 +88,7 @@ class MyTab {
       let tabInfo: browser.tabs.Tab | undefined;
       if (typeof arg === "number") {
         this.TabID = arg;
-        tabInfo = await this.Query();
+        tabInfo = await this.GetTabInfo();
       } else {
         tabInfo = arg;
       }
