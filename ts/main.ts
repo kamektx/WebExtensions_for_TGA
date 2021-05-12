@@ -1,8 +1,32 @@
-const app = new App();
-const isEventActive = true;
-const timer = new ScreenCaptureTimer();
+let app: App;
+type InitErrorT = ("" | "NotInstalled" | "NoBrowserName");
+let initError: InitErrorT = "";
 
-if (isEventActive) {
+
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  switch (message.From) {
+    case "options":
+      switch (message.Command) {
+        case "requestBrowserName":
+          const obj = {
+            Type: "RequestBrowserName"
+          }
+          app.Messaging.PostMessage(obj);
+          console.log("Sent RequestBrowserName");
+          break;
+        case "initError":
+          sendResponse(initError);
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+});
+
+const ActivateEvents = () => {
   browser.windows.onCreated.addListener(async (windowInfo: browser.windows.Window) => {
     console.log("windows.onCreated");
     app.SendingObject.AddWindow(windowInfo);
@@ -18,18 +42,9 @@ if (isEventActive) {
         app.SendingObject.FocusChanged(windowID);
         break;
       case "Chromium":
-        const windowInfo = await browser.windows.getLastFocused({
-          populate: false,
-          windowTypes: ["normal"]
-        })
-        if (windowInfo.focused && windowInfo.id !== undefined) {
-          app.SendingObject.FocusChanged(windowInfo.id);
-        } else {
-          app.SendingObject.FocusChanged(-1);
-        }
+        app.SendingObject.CheckFocused();
         break;
     }
-
   });
 
   browser.tabs.onActivated.addListener(async (activeInfo) => {
@@ -173,8 +188,33 @@ browser.browserAction.setTitle({
 });
 
 browser.browserAction.onClicked.addListener(async () => {
+  if (!app.IsAppInited) return;
   app.Messaging.Dispose();
   app.Messaging = new Messaging();
   app.SendingObject.Error.ThrowError("ResetButton was pressed.");
 });
+
+
+const init = async (): Promise<boolean> => {
+  app = new App();
+  await Thread.Delay(100);
+  if (!app.Messaging.IsPortOK()) {
+    initError = "NotInstalled";
+    browser.tabs.create({ active: true, url: "/options.html" });
+    return false;
+  }
+
+  const browserName = await browser.storage.local.get("BrowserName");
+  if (browserName.BrowserName === undefined) {
+    initError = "NoBrowserName";
+    browser.tabs.create({ active: true, url: "/options.html" });
+    return false;
+  }
+
+  app.BrowserName = browserName.BrowserName;
+  app.AppInit();
+  return true;
+}
+
+init();
 

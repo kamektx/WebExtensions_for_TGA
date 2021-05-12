@@ -1,3 +1,13 @@
+class AppReference {
+  FieldName: string;
+  public toJSON() {
+    return app[this.FieldName];
+  }
+  constructor(fieldName: string) {
+    this.FieldName = fieldName;
+  }
+}
+
 class SendingObject {
   Ready2: Ready;
   readonly Type = "SendingObject";
@@ -7,6 +17,8 @@ class SendingObject {
   UnmanagedWindows: Set<number>;
   ReadyInstances: ReadyInstances;
   Error: SendingObjectError;
+  ChromiumOrGecko: AppReference;
+  BrowserName: AppReference;
 
   public FindWindowWhichHasTheTabID = async (tabID: number): Promise<(MyWindow | undefined)> => {
     const result = await this.Ready2.AddReadTaskAny(async (): Promise<MyWindow | undefined> => {
@@ -106,7 +118,7 @@ class SendingObject {
           return false;
         }
       }
-      if (this.Windows.has(windowID)) {
+      if (windowID !== -1 && this.Windows.has(windowID)) {
         const myWindow = this.Windows.get(windowID)!;
         myWindow.Ready2.AddWriteTask(async () => {
           myWindow.IsActive = true;
@@ -120,11 +132,25 @@ class SendingObject {
     });
   }
 
+  public CheckFocused = async () => {
+    const windowInfo = await browser.windows.getLastFocused({
+      populate: false,
+      windowTypes: ["normal"]
+    })
+    if (windowInfo.focused && windowInfo.id !== undefined) {
+      this.FocusChanged(windowInfo.id);
+    } else {
+      this.FocusChanged(-1);
+    }
+  }
+
   public ChangeOccured = async () => {
     this.ReadyInstances.PrepareSending();
   }
 
   public constructor() {
+    this.ChromiumOrGecko = new AppReference("ChromiumOrGecko");
+    this.BrowserName = new AppReference("BrowserName");
     this.Ready2 = new Ready(this, this);
     this.Ready2.AddVerifyTask(this.Verify);
     this.ActiveWindowID = undefined;

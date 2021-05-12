@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>WebExtension for TouchpadGestures Advanced Settings Page</title>
+  <meta charset="UTF-8">
+  <script src="modules/browser-polyfill.min.js"></script>
+  <script src="js/utilFunctions.js"></script>
+  <link rel="stylesheet" href="Options.css">
+</head>
+<body>
+  <section id="main">
+    <div id="initButtonWrap">
+      <p>First, press this button</p>
+      <button type="button" id="initButton">Press me</button>
+    </div>
+    <div id="waiting">
+      <p>Please wait a second...</p>
+    </div>
+    <div id="initEnd">
+      <p>Press the Windows key once to finish!</p>
+      <p>Now, you can use TouchpadGestures Advanced on this browser.</p>
+    </div>
+    <div id="notInstalled">
+      <p>First, please install TouchpadGestures Advanced program on your PC.</p>
+      <p><a href="https://github.com/kamektx/TouchpadGestures_Advanced/releases">https://github.com/kamektx/TouchpadGestures_Advanced/releases</a></p>
+      <p>After installation, close and restart this browser.</p>
+    </div>
+    <div id="default">
+      <p>There are no configuration options yet...</p>
+    </div>
+  </section>
+  <script src="js/Options.js"></script>
+</body>
+</html>

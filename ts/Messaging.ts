@@ -1,9 +1,10 @@
 interface MessageResponse {
-  Command: ("ChangeTab" | "Received"),
+  Command: ("ChangeTab" | "Received" | "BrowserName" | "CheckFocused"),
   WindowID?: number,
   TabID?: number,
   PageID?: number,
-  ReceivedIndex?: number
+  ReceivedIndex?: number,
+  BrowserName?: string
 }
 
 class Messaging {
@@ -18,6 +19,8 @@ class Messaging {
   private TimerMilliSeconds: number = this.TimeToReconnect;
   private IsTimerRunning: boolean = false;
   private Disposed: boolean = false;
+  private IsInitError: boolean = false;
+  public ShouldReconnect: boolean = false;
 
   private ExecutePostMessage(obj: object, index: number) {
     console.log(`Posted a Message. Index: ${index}`);
@@ -38,12 +41,22 @@ class Messaging {
     this.IsTimerRunning = false;
     if (this.PostingIndex == this.ReceivedIndex) return true;
     if (this.Disposed) return false;
+    if (!this.ShouldReconnect) return false;
     console.log(" VerifyReceivedTimer is over. Trying Reconnect...")
     this.Disconnect();
     this.Reconnect();
     this.ReceivedIndex = this.PostingIndex;
     this.HandleNextTask();
     return false;
+  }
+
+  IsPortOK = (): boolean => {
+    if (this.IsInitError) return false;
+    if (this.Port.error != null) {
+      console.log(this.Port.error?.message);
+      return false;
+    }
+    return true;
   }
 
   PostMessage = (obj: object): void => {
@@ -57,13 +70,6 @@ class Messaging {
     }
   }
 
-  Received = (response: MessageResponse): void => {
-    const receivedIndex = response.ReceivedIndex!;
-    console.log("ReceivedIndex: " + receivedIndex);
-    this.ReceivedIndex = receivedIndex;
-    this.HandleNextTask();
-  }
-
   HandleNextTask = (): void => {
     if (this.Disposed) return;
     if (this._Tasks.has(this.ReceivedIndex + 1)) {
@@ -74,9 +80,26 @@ class Messaging {
     }
   }
 
-  ChangeTab = (response: MessageResponse): void => {
+  private HandleReceived = (response: MessageResponse): void => {
+    const receivedIndex = response.ReceivedIndex!;
+    console.log("ReceivedIndex: " + receivedIndex);
+    this.ReceivedIndex = receivedIndex;
+    this.HandleNextTask();
+  }
+
+  private HandleBrowserName = (response: MessageResponse): void => {
+    const browserName = response.BrowserName!;
+    console.log("BrowserName: " + browserName);
+    app.BrowserName = browserName;
+    browser.storage.local.set({ BrowserName: browserName });
+    initError = "";
+    app.AppInit();
+  }
+
+  private ChangeTab = (response: MessageResponse): void => {
     const TabID = response.TabID!;
     const WindowID = response.WindowID!;
+    console.log(response);
     if (app.SendingObject.ActiveWindowID != WindowID) {
       browser.windows.update(
         WindowID,              // integer
@@ -102,23 +125,39 @@ class Messaging {
   }
 
   Reconnect = (): void => {
-    this.Port = browser.runtime.connectNative("tga_nativemessaging_cliant");
-    this.Port.onMessage.addListener((response) => {
-      console.log("Message Received.");
-      const responseCasted = response as MessageResponse;
-      const command = responseCasted.Command;
-      switch (command) {
-        case "Received":
-          this.Received(responseCasted);
-          break;
-        case "ChangeTab":
-          console.log(responseCasted);
-          this.ChangeTab(responseCasted);
-          break;
-        default:
-          break;
-      }
-    });
+    try {
+      this.Port = browser.runtime.connectNative("tga_nativemessaging_cliant");
+      this.Port.onDisconnect.addListener((port) => {
+        console.log(browser.runtime.lastError?.message);
+        this.IsInitError = true;
+      });
+      this.Port.onMessage.addListener((response) => {
+        console.log("Message Received.");
+        this.ShouldReconnect = true;
+        const responseCasted = response as MessageResponse;
+        const command = responseCasted.Command;
+        switch (command) {
+          case "Received":
+            this.HandleReceived(responseCasted);
+            break;
+          case "ChangeTab":
+            this.ChangeTab(responseCasted);
+            break;
+          case "BrowserName":
+            this.HandleBrowserName(responseCasted);
+            break;
+          case "CheckFocused":
+            console.log("CheckFocused");
+            app.SendingObject.CheckFocused();
+            break;
+          default:
+            break;
+        }
+      });
+    } catch (e) {
+      console.log(e);
+      this.IsInitError = true;
+    }
   }
 
   constructor() {

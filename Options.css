@@ -1,0 +1,12 @@
+body {
+  background-color: #e7ecf5;
+}
+
+body * {
+  font-size: 18px;
+  font-family: "Helvetica Neue", "Helvetica", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Arial", "Yu Gothic", "Meiryo", sans-serif;
+}
+
+section#main {
+  padding: 20px;
+}
