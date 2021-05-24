@@ -21,16 +21,16 @@ class ScreenCaptureTimer {
                     myTab.ScreenShot.Recapture();
                   }
                   return true;
-                });
+                }, "error", "quit", "ScreenCaptureTimer.Run()");
               } else {
                 return false;
               }
             }
             return true;
-          });
+          }, "error", "quit", "ScreenCaptureTimer.Run()");
         }
         return true;
-      });
+      }, "error", "quit", "ScreenCaptureTimer.Run()");
     }
   }
   constructor() {

@@ -9,6 +9,7 @@ class Ready {
   private _WriteAccess: boolean;
   private _IsNotyfyChange: boolean;
   private _MyObject: any;
+  private _TaskStat = new Map<string, number>();
   IsNotError: boolean;
   SendingObject: SendingObject;
 
@@ -19,7 +20,18 @@ class Ready {
     return !this.IsNotError;
   }
 
-  Verify = async () => { // Call it only when the task is the last task;
+  private ManageTasks = (taskIndex: number, taskName: string) => {
+    if (taskIndex > Ready.MaxTasks) {
+      this._Tasks.delete(taskIndex - Ready.MaxTasks);
+    }
+    if (this._TaskStat.has(taskName)) {
+      this._TaskStat.set(taskName, this._TaskStat.get(taskName)! + 1);
+    } else {
+      this._TaskStat.set(taskName, 1);
+    }
+  }
+
+  Verify = () => { // Call it only when the task is the last task;
     this._IsReady = false;
     const myTaskIndex = ++this._TaskIndex;
     this._LastWriteTaskIndex = myTaskIndex;
@@ -34,6 +46,7 @@ class Ready {
       if (myTaskIndex > Ready.MaxTasks) {
         this._Tasks.delete(myTaskIndex - Ready.MaxTasks);
       }
+      this.ManageTasks(myTaskIndex, "Verify");
       if (this._TaskIndex === myTaskIndex) {
         this._IsReady = true;
         if (this._IsNotyfyChange && this._WriteAccess) {
@@ -45,7 +58,7 @@ class Ready {
     }));
   }
 
-  AddWriteTask = async (fn: () => Promise<boolean>, ifReturnFalse: ("error" | "ignore" | "retry") = "error", ifAlreadyError: ("quit" | "force") = "quit"): Promise<boolean> => {
+  AddWriteTask = async (fn: () => Promise<boolean>, ifReturnFalse: ("error" | "ignore" | "retry") = "error", ifAlreadyError: ("quit" | "force") = "quit", taskName: string = "UnknownWriteTask"): Promise<boolean> => {
     if (this.IsError && ifAlreadyError === "quit") {
       return false;
     }
@@ -62,9 +75,7 @@ class Ready {
       const result = await fn();
       this._WriteAccess = true;
       this._DoneTaskIndex = myTaskIndex;
-      if (myTaskIndex > Ready.MaxTasks) {
-        this._Tasks.delete(myTaskIndex - Ready.MaxTasks);
-      }
+      this.ManageTasks(myTaskIndex, taskName);
       if (ifReturnFalse === "error" && result === false) {
         this.IsNotError = false;
       }
@@ -76,7 +87,7 @@ class Ready {
     }
     return result;
   }
-  AddReadTask = async (fn: () => Promise<boolean>, ifReturnFalse: ("error" | "ignore") = "error", ifAlreadyError: ("quit" | "force") = "quit"): Promise<boolean> => {
+  AddReadTask = async (fn: () => Promise<boolean>, ifReturnFalse: ("error" | "ignore") = "error", ifAlreadyError: ("quit" | "force") = "quit", taskName: string = "UnknownReadTask"): Promise<boolean> => {
     if (this.IsError && ifAlreadyError === "quit") {
       return false;
     }
@@ -90,9 +101,7 @@ class Ready {
         }
       }
       const result = await fn();
-      if (myTaskIndex > Ready.MaxTasks) {
-        this._Tasks.delete(myTaskIndex - Ready.MaxTasks);
-      }
+      this.ManageTasks(myTaskIndex, taskName);
       if (ifReturnFalse === "error" && result === false) {
         this.IsNotError = false;
       }
@@ -104,40 +113,40 @@ class Ready {
     }
     return result;
   }
-  WaitForThisReadyAndWaitForSendingJSON = async (): Promise<boolean> => {
-    this._IsReady = false;
-    const myTaskIndex = this._TaskIndex += 2;
-    this._LastWriteTaskIndex = myTaskIndex;
-    this._Tasks.set(myTaskIndex - 1, new Promise<boolean>(async (resolve) => {
-      for (let i = this._DoneTaskIndex + 1; i < myTaskIndex - 1; i++) {
-        await this._Tasks.get(i);
-      }
-      this._DoneTaskIndex = myTaskIndex - 1;
-      if (myTaskIndex - 1 > Ready.MaxTasks) {
-        this._Tasks.delete(myTaskIndex - 1 - Ready.MaxTasks);
-      }
-      resolve(this.IsNotError);
-    }));
-    this._Tasks.set(myTaskIndex, new Promise<boolean>(async (resolve) => {
-      for (let i = this._DoneTaskIndex + 1; i < myTaskIndex; i++) {
-        await this._Tasks.get(i);
-      }
-      while (this.SendingObject.ReadyInstances.IsSendingJSON) {
-        await Thread.Delay(20);
-      }
-      this._DoneTaskIndex = myTaskIndex;
-      if (myTaskIndex > Ready.MaxTasks) {
-        this._Tasks.delete(myTaskIndex - Ready.MaxTasks);
-      }
-      resolve(true);
-    }));
-    const result = await this._Tasks.get(myTaskIndex - 1)!;
-    if (this._TaskIndex === myTaskIndex) {
-      this.Verify()
-    }
-    return result;
-  }
-  AddReadTaskAny = async <T>(fn: () => Promise<T>, ifAlreadyError: ("quit" | "force") = "quit"): Promise<T | undefined> => {
+  // WaitForThisReadyAndWaitForSendingJSON = async (): Promise<boolean> => {
+  //   this._IsReady = false;
+  //   const myTaskIndex = this._TaskIndex += 2;
+  //   this._LastWriteTaskIndex = myTaskIndex;
+  //   this._Tasks.set(myTaskIndex - 1, new Promise<boolean>(async (resolve) => {
+  //     for (let i = this._DoneTaskIndex + 1; i < myTaskIndex - 1; i++) {
+  //       await this._Tasks.get(i);
+  //     }
+  //     this._DoneTaskIndex = myTaskIndex - 1;
+  //     if (myTaskIndex - 1 > Ready.MaxTasks) {
+  //       this._Tasks.delete(myTaskIndex - 1 - Ready.MaxTasks);
+  //     }
+  //     resolve(this.IsNotError);
+  //   }));
+  //   this._Tasks.set(myTaskIndex, new Promise<boolean>(async (resolve) => {
+  //     for (let i = this._DoneTaskIndex + 1; i < myTaskIndex; i++) {
+  //       await this._Tasks.get(i);
+  //     }
+  //     while (this.SendingObject.ReadyInstances.IsSendingJSON) {
+  //       await Thread.Delay(20);
+  //     }
+  //     this._DoneTaskIndex = myTaskIndex;
+  //     if (myTaskIndex > Ready.MaxTasks) {
+  //       this._Tasks.delete(myTaskIndex - Ready.MaxTasks);
+  //     }
+  //     resolve(true);
+  //   }));
+  //   const result = await this._Tasks.get(myTaskIndex - 1)!;
+  //   if (this._TaskIndex === myTaskIndex) {
+  //     this.Verify()
+  //   }
+  //   return result;
+  // }
+  AddReadTaskAny = async <T>(fn: () => Promise<T>, ifAlreadyError: ("quit" | "force") = "quit", taskName: string = "UnknownReadTaskAny"): Promise<T | undefined> => {
     if (this.IsError && ifAlreadyError === "quit") {
       return undefined;
     }
@@ -151,9 +160,7 @@ class Ready {
         }
       }
       const result = await fn();
-      if (myTaskIndex > Ready.MaxTasks) {
-        this._Tasks.delete(myTaskIndex - Ready.MaxTasks);
-      }
+      this.ManageTasks(myTaskIndex, taskName);
       resolve(result);
     }));
     const result = await this._Tasks.get(myTaskIndex)!;

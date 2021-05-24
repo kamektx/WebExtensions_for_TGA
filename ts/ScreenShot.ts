@@ -87,7 +87,7 @@ class ScreenShot {
       return this.TabURL !== this.MyTab.URL ||
         this.TabStatus !== this.MyTab.Status ||
         this.TabTitle !== this.MyTab.Title;
-    }, "ignore");
+    }, "ignore", "quit", "ScreenShot.CheckTabUpdated()");
   }
 
   public Recapture = async (): Promise<boolean> => {
@@ -117,7 +117,7 @@ class ScreenShot {
         return true;
       }
       return true;
-    });
+    }, "error", "quit", "ScreenShot.Recapture()");
 
   }
 
@@ -128,7 +128,7 @@ class ScreenShot {
       this.TabStatus = this.MyTab.Status;
       this.TabTitle = this.MyTab.Title;
       return true;
-    });
+    }, "error", "quit", "ScreenShot.SetTabInformation()");
   }
 
   public toJSON() {
@@ -136,7 +136,7 @@ class ScreenShot {
   }
 
   public SendJSON = async (): Promise<boolean> => {
-    return await this.Ready2.AddReadTask(async () => {
+    return await this.Ready2.AddWriteTask(async () => {
       if (this.IsCaputured) {
         const obj = {
           Type: "ScreenShot",
@@ -145,6 +145,7 @@ class ScreenShot {
         }
         app.Messaging.PostMessage(obj);
         this.MyTab.MyWindow.LastCapturedTab = this.MyTab.TabID;
+        this.Data = "";
         console.log("Sent ScreenShot");
       } else if (this.CannotCapture) {
         const obj = {

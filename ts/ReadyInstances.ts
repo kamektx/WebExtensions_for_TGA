@@ -20,25 +20,26 @@ class ReadyInstances extends Set<Ready> {
 
   SendJSON = async (): Promise<boolean> => {
     this.IsSendingJSON = true;
-    let promise = new Promise<boolean>(async resolve => {
-      for (const ready of this) {
-        const isNotError = await ready.WaitForThisReadyAndWaitForSendingJSON();
-        if (isNotError === false) {
-          resolve(false);
-          return;
-        }
-      }
-      if (this.SendingObject !== app.SendingObject) {
-        resolve(false);
-        return;
-      }
-      app.Messaging.PostMessage(this.SendingObject);
-      resolve(true);
-    });
-    const result = await promise;
-    console.log("Sent SendingObject.", result);
+    // let promise = new Promise<boolean>(async resolve => {
+    //   for (const ready of this) {
+    //     const isNotError = await ready.WaitForThisReadyAndWaitForSendingJSON();
+    //     if (isNotError === false) {
+    //       resolve(false);
+    //       return;
+    //     }
+    //   }
+    //   if (this.SendingObject !== app.SendingObject) {
+    //     resolve(false);
+    //     return;
+    //   }
+    //   app.Messaging.PostMessage(this.SendingObject);
+    //   resolve(true);
+    // });
+    // const result = await promise;
+    app.Messaging.PostMessage(this.SendingObject);
+    console.log("Sent SendingObject.");
     this.IsSendingJSON = false;
-    return result;
+    return true;
   }
 
   ResetTimer = () => {

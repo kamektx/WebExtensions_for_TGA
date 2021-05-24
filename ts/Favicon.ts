@@ -65,6 +65,7 @@ class Favicon {
         Data: this.Data
       }
       app.Messaging.PostMessage(obj);
+      this.Data = "";
       console.log("Sent Favicon");
       return true;
     }

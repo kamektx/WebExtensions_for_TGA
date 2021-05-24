@@ -9,13 +9,12 @@ interface MessageResponse {
 
 class Messaging {
   private Port!: browser.runtime.Port;
-  static readonly MaxTasks = 300;
   private _Tasks: Map<number, object>;
   private _TaskIndex: number;
   private PostingIndex: number = 0;
   private ReceivedIndex: number = 0;
   private TickTime: number = 100;
-  private TimeToReconnect: number = 4000;
+  private TimeToReconnect: number = 10 * 1000;
   private TimerMilliSeconds: number = this.TimeToReconnect;
   private IsTimerRunning: boolean = false;
   private Disposed: boolean = false;
@@ -75,15 +74,15 @@ class Messaging {
     if (this._Tasks.has(this.ReceivedIndex + 1)) {
       this.ExecutePostMessage(this._Tasks.get(this.ReceivedIndex + 1)!, this.ReceivedIndex + 1);
     }
-    if (this.ReceivedIndex > Messaging.MaxTasks) {
-      this._Tasks.delete(this.ReceivedIndex - Messaging.MaxTasks);
-    }
   }
 
   private HandleReceived = (response: MessageResponse): void => {
     const receivedIndex = response.ReceivedIndex!;
     console.log("ReceivedIndex: " + receivedIndex);
     this.ReceivedIndex = receivedIndex;
+    if (this._Tasks.has(this.ReceivedIndex)) {
+      this._Tasks.delete(this.ReceivedIndex);
+    }
     this.HandleNextTask();
   }
 
