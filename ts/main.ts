@@ -189,9 +189,10 @@ browser.browserAction.setTitle({
 
 browser.browserAction.onClicked.addListener(async () => {
   if (!app.IsAppInited) return;
-  app.Messaging.Dispose();
-  app.Messaging = new Messaging();
   app.SendingObject.Error.ThrowError("ResetButton was pressed.");
+  app.Messaging.Dispose();
+  await Thread.Delay(500);
+  app.Messaging = new Messaging();
 });
 
 
