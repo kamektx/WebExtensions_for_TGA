@@ -25,7 +25,7 @@ class MyWindow {
   // }
 
   Verify2 = async (): Promise<boolean> => {
-    if (this.LastCapturedTab !== undefined && this.Tabs.has(this.LastCapturedTab!) === false) {
+    if (this.LastCapturedTab != undefined && this.Tabs.has(this.LastCapturedTab!) === false) {
       this.LastCapturedTab = undefined;
     }
     if (this.Ready2.IsError) {
@@ -37,7 +37,7 @@ class MyWindow {
 
   public ActiveTabChanged = async (tabID: number): Promise<boolean> => {
     return await this.Ready2.AddWriteTask(async (): Promise<boolean> => {
-      if (this.ActiveTabID !== undefined) {
+      if (this.ActiveTabID != undefined) {
         if (this.Tabs.has(this.ActiveTabID)) {
           const myTab = this.Tabs.get(this.ActiveTabID)!;
           await myTab.Ready2.AddWriteTask(async () => {
@@ -86,7 +86,7 @@ class MyWindow {
       const tabInfo = await browser.tabs.get(tabID).catch(() => {
         return undefined;
       });
-      if (tabInfo !== undefined) {
+      if (tabInfo != undefined) {
         this.InsertTabInfo(tabInfo);
       } else {
         return false;
@@ -106,7 +106,7 @@ class MyWindow {
       this.TabsInOrder = new Array();
       const tabsInfo = await browser.tabs.query({ windowId: this.WindowID });
       for (const tabInfo of tabsInfo) {
-        if (tabInfo.id !== undefined) {
+        if (tabInfo.id != undefined) {
           this.TabsInOrder[tabInfo.index] = tabInfo.id;
         } else {
           throw new Error("Couldn't get the TabID");
@@ -125,7 +125,7 @@ class MyWindow {
         const tabInfo = await browser.tabs.get(addedTabID).catch(() => {
           return undefined;
         });
-        if (tabInfo !== undefined) {
+        if (tabInfo != undefined) {
           this.InsertTabInfo(tabInfo);
         } else {
           return false;
@@ -168,7 +168,7 @@ class MyWindow {
     return true;
   }
   SetTabInfo = (tabInfo: browser.tabs.Tab) => {
-    if (tabInfo.id !== undefined) {
+    if (tabInfo.id != undefined) {
       this.Tabs.set(tabInfo.id, new MyTab(this, tabInfo));
       this.TabsInOrder[tabInfo.index] = tabInfo.id;
       if (tabInfo.active) {
@@ -180,7 +180,7 @@ class MyWindow {
     }
   }
   InsertTabInfo = (tabInfo: browser.tabs.Tab) => {
-    if (tabInfo.id !== undefined) {
+    if (tabInfo.id != undefined) {
       if (!this.Tabs.has(tabInfo.id)) {
         this.Tabs.set(tabInfo.id, new MyTab(this, tabInfo));
         this.TabsInOrder.splice(tabInfo.index, 0, tabInfo.id);
@@ -238,7 +238,7 @@ class MyWindow {
       } else {
         windowInfo = arg;
       }
-      if (windowInfo !== undefined) {
+      if (windowInfo != undefined) {
         result = await this.SetWindowInfo(windowInfo);
       } else {
         return false;

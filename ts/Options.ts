@@ -25,7 +25,7 @@ document.getElementById("initButton")?.addEventListener("click", async () => {
 });
 
 const changeVisibleDiv = (divId: string) => {
-  if (visibleDiv !== undefined) {
+  if (visibleDiv != undefined) {
     visibleDiv.style.display = "none";
   }
   visibleDiv = document.getElementById(divId) as HTMLElement

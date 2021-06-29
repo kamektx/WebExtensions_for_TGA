@@ -32,9 +32,9 @@ class MyTab {
   public Update = async (): Promise<boolean> => {
     return this.Ready2.AddWriteTask(async (): Promise<boolean> => {
       const tabInfo = await this.GetTabInfo();
-      if (tabInfo !== undefined) {
+      if (tabInfo != undefined) {
         this.SetTabInfo(tabInfo);
-        if (tabInfo.favIconUrl === undefined || tabInfo.favIconUrl === "") {
+        if (tabInfo.favIconUrl == undefined || tabInfo.favIconUrl === "") {
           this.Favicon = undefined;
         }
         return true;
@@ -92,7 +92,7 @@ class MyTab {
       } else {
         tabInfo = arg;
       }
-      if (tabInfo !== undefined) {
+      if (tabInfo != undefined) {
         this.SetTabInfo(tabInfo);
         this.SetFavicon(tabInfo.favIconUrl);
         return true;

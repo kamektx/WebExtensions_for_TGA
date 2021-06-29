@@ -23,7 +23,7 @@ class SendingObject {
   public FindWindowWhichHasTheTabID = async (tabID: number): Promise<(MyWindow | undefined)> => {
     const result = await this.Ready2.AddReadTaskAny(async (): Promise<MyWindow | undefined> => {
       const activeWindowID = this.ActiveWindowID;
-      if (activeWindowID !== undefined) {
+      if (activeWindowID != undefined) {
         if (this.Windows.has(activeWindowID)) {
           const myWindow = this.Windows.get(activeWindowID)!;
           if (await myWindow.Ready2.AddReadTask(async () => myWindow.Tabs.has(tabID), "ignore")) {
@@ -58,7 +58,7 @@ class SendingObject {
 
   SetWindowsInfo = async (windowsInfo: browser.windows.Window[]): Promise<boolean> => {
     for (const windowInfo of windowsInfo) {
-      if (windowInfo.id === undefined) {
+      if (windowInfo.id == undefined) {
         throw new Error();
       }
       if (windowInfo.type !== "normal") {
@@ -107,7 +107,7 @@ class SendingObject {
   }
   public FocusChanged = async (windowID: number): Promise<boolean> => {
     return await this.Ready2.AddWriteTask(async () => {
-      if (this.ActiveWindowID !== undefined) {
+      if (this.ActiveWindowID != undefined) {
         if (this.Windows.has(this.ActiveWindowID)) {
           const myWindow = this.Windows.get(this.ActiveWindowID)!;
           myWindow.Ready2.AddWriteTask(async () => {
@@ -137,7 +137,7 @@ class SendingObject {
       populate: false,
       windowTypes: ["normal"]
     })
-    if (windowInfo.focused && windowInfo.id !== undefined) {
+    if (windowInfo.focused && windowInfo.id != undefined) {
       this.FocusChanged(windowInfo.id);
     } else {
       this.FocusChanged(-1);
@@ -164,7 +164,7 @@ class SendingObject {
       const windowsInfo = await browser.windows.getAll({ populate: false }).catch(() => {
         return undefined;
       });
-      if (windowsInfo !== undefined) {
+      if (windowsInfo != undefined) {
         return await this.SetWindowsInfo(windowsInfo);
       } else {
         return false;

@@ -88,7 +88,7 @@ const ActivateEvents = () => {
   });
   browser.tabs.onCreated.addListener(async (tabInfo) => {
     console.log("tabs.onCreated");
-    if (tabInfo.windowId === undefined) {
+    if (tabInfo.windowId == undefined) {
       throw new Error("Couldn't get the windowID");
     }
     for (let i = 2; i > 0; i--) {
@@ -109,7 +109,7 @@ const ActivateEvents = () => {
   });
   browser.tabs.onMoved.addListener(async (tabID, moveInfo) => {
     console.log("tabs.onMoved");
-    if (moveInfo.windowId === undefined) {
+    if (moveInfo.windowId == undefined) {
       throw new Error("Couldn't get the windowID");
     }
     switch (await app.SendingObject.HasWindowID(moveInfo.windowId!)) {
@@ -123,7 +123,7 @@ const ActivateEvents = () => {
   });
   browser.tabs.onRemoved.addListener(async (tabID, removeInfo) => {
     console.log("tabs.onRemoved");
-    if (removeInfo.windowId === undefined) {
+    if (removeInfo.windowId == undefined) {
       throw new Error("Couldn't get the windowID");
     }
     switch (await app.SendingObject.HasWindowID(removeInfo.windowId!)) {
@@ -140,7 +140,7 @@ const ActivateEvents = () => {
   chrome.tabs.onReplaced.addListener(async (addedTabID, removedTabID) => {
     console.log("tabs.onReplaced");
     const myWindow = await app.SendingObject.FindWindowWhichHasTheTabID(removedTabID);
-    if (myWindow === undefined) {
+    if (myWindow == undefined) {
       app.SendingObject.Error.ThrowError("SendingObject : Couldn't find the window which has the TabID " + removedTabID + ". : tabs.onReplaced");
       return;
     }
@@ -149,14 +149,14 @@ const ActivateEvents = () => {
 
 
   browser.tabs.onUpdated.addListener(async (tabID, changeInfo, tabInfo) => {
-    if (tabInfo.windowId === undefined) {
+    if (tabInfo.windowId == undefined) {
       throw new Error("Couldn't get the windowID");
     }
-    const shouldUpdate: boolean = changeInfo.url !== undefined ||
-      changeInfo.title !== undefined ||
-      changeInfo.pinned !== undefined ||
-      changeInfo.hidden !== undefined ||
-      changeInfo.status !== undefined;
+    const shouldUpdate: boolean = changeInfo.url != undefined ||
+      changeInfo.title != undefined ||
+      changeInfo.pinned != undefined ||
+      changeInfo.hidden != undefined ||
+      changeInfo.status != undefined;
     if (shouldUpdate) {
       console.log("tabs.onUpdated");
       console.log(changeInfo);
@@ -169,7 +169,7 @@ const ActivateEvents = () => {
           break;
       }
     }
-    if (changeInfo.favIconUrl !== undefined) {
+    if (changeInfo.favIconUrl != undefined) {
       console.log("tabs.onUpdated (Favicon)");
       switch (await app.SendingObject.HasWindowID(tabInfo.windowId!)) {
         case "false":
@@ -206,7 +206,7 @@ const init = async (): Promise<boolean> => {
   }
 
   const browserName = await browser.storage.local.get("BrowserName");
-  if (browserName.BrowserName === undefined) {
+  if (browserName.BrowserName == undefined) {
     initError = "NoBrowserName";
     browser.tabs.create({ active: true, url: "/options.html" });
     return false;
