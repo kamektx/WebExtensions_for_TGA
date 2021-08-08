@@ -35,7 +35,7 @@ class Messaging {
   private VerifyReceivedTimer = async (): Promise<boolean> => {
     while (this.TimerMilliSeconds > 0) {
       await Thread.Delay(this.TickTime);
-      this.TimerMilliSeconds -= SendingObjectError.TickTime;
+      this.TimerMilliSeconds -= this.TickTime;
     }
     this.IsTimerRunning = false;
     if (this.PostingIndex == this.ReceivedIndex) return true;
